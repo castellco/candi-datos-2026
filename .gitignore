@@ -15,4 +15,7 @@
 # Ignore
 *.pdf
 *_old.py
+*.pbix
+*.duckdb
+*.duckdb.wal
 
