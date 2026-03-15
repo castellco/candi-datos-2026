@@ -3,8 +3,7 @@ source("assets/functions.R")
 # Paleta de colores
 gris_claro       <- "#464743"
 rojo             <- "#be2e1c"
-amarillo         <- "#febd17"
-azul             <- "#02a1c7"
+amarillo         <- "#fdf0d5"
 background_oscuro <- "#383838"
 blanco           <- "#ffffff"
 

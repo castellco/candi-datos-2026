@@ -4,27 +4,40 @@
 
 $font-family-sans-serif: "Cabin", sans-serif;
 $headings-font-family:   "Special Gothic Expanded One", sans-serif;
-
-$navbar-bg:  #383838 !default;
-$navbar-fg:  #ffffff !default;
-$primary:    #be2e1c;
-$link-color: #be2e1c;
+$navbar-bg:              #383838 !default;
+$navbar-fg:              #ffffff !default;
+$primary:                #be2e1c;
+$link-color:             #be2e1c;
 
 /*-- scss:rules --*/
 
-.navbar-container {
-  height: 75px;
-}
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+
+.navbar-container { height: 75px; }
 
 .navbar-title {
   font-family: "Special Gothic Expanded One", sans-serif;
   letter-spacing: 0.02em;
 }
 
-/* ── Value boxes ─────────────────────────────────────────── */
+/* ── Quitar bordes y título de los cards de gráficos ─────────────────────── */
+/* Solo afecta cards normales, NO los value boxes */
+
+.quarto-dashboard .card:not(.bslib-value-box) {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.quarto-dashboard .card:not(.bslib-value-box) .card-header {
+  display: none !important;
+}
+
+/* ── Value boxes ─────────────────────────────────────────────────────────── */
 
 .bslib-value-box {
   min-height: 0 !important;
+  overflow: hidden !important;     /* elimina el scrollbar interno */
 }
 
 .bslib-value-box .value-box-grid {
@@ -39,71 +52,84 @@ $link-color: #be2e1c;
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding-top: 0.3rem !important;
-  padding-bottom: 0.3rem !important;
+  padding: 0.3rem !important;
+  overflow: hidden !important;
 }
 
 /* número arriba */
 .bslib-value-box .value-box-value {
   order: 1;
-  font-size: 1.6rem !important;
-  line-height: 1.2 !important;
+  font-size: 1.5rem !important;
+  line-height: 1.1 !important;
   margin: 0 !important;
+  white-space: nowrap;
 }
 
 /* título abajo */
 .bslib-value-box .value-box-title {
   order: 2;
-  font-size: 0.75rem !important;
-  line-height: 1.2 !important;
-  margin-top: 0.25rem !important;
+  font-size: 0.7rem !important;
+  line-height: 1.1 !important;
+  margin-top: 0.2rem !important;
   margin-bottom: 0 !important;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   opacity: 0.85;
+  white-space: nowrap;
 }
 
-/* ── Cards generales ─────────────────────────────────────── */
-
-.bslib-card .card-body p {
-  font-size: 0.9rem;
+/* El shiny output que envuelve el value_box no debe tener tamaño propio */
+.bslib-value-box .shiny-html-output {
+  width: 100%;
+  height: 100%;
 }
 
-/* ── Responsividad ───────────────────────────────────────── */
+/* ── Cards generales ─────────────────────────────────────────────────────── */
 
-/* Los gráficos ggplot llenan su contenedor */
-.bslib-card .card-body img,
-.bslib-card .card-body .shiny-plot-output {
-  width: 100% !important;
-  height: auto !important;
-}
+.bslib-card .card-body p { font-size: 0.9rem; }
 
-/* Plotly y htmlwidgets también */
+/* ── Plotly y gráficos: responsivos ──────────────────────────────────────── */
+
 .bslib-card .card-body .plotly,
-.bslib-card .card-body .html-widget {
+.bslib-card .card-body .html-widget,
+.shiny-plot-output {
   width: 100% !important;
 }
 
-/* Tablet: reducir fuente de valores */
-@media (max-width: 992px) {
-  .bslib-value-box .value-box-value {
-    font-size: 1.3rem !important;
-  }
-  .bslib-value-box .value-box-title {
-    font-size: 0.7rem !important;
-  }
+/* ── Tabla DT ────────────────────────────────────────────────────────────── */
+
+.dataTables_wrapper {
+  color: #ffffff;
 }
 
-/* Móvil: apilar columnas, ajustar fuentes */
-@media (max-width: 576px) {
-  .bslib-value-box .value-box-value {
-    font-size: 1.1rem !important;
-  }
-  .bslib-value-box .value-box-title {
-    font-size: 0.65rem !important;
-  }
+table.dataTable thead th {
+  background-color: #464743;
+  color: #ffffff;
+  border-bottom: 1px solid #be2e1c;
+}
 
-  /* En móvil los cards de gráficos ocupan todo el ancho */
+table.dataTable tbody tr {
+  background-color: #383838;
+  color: #ffffff;
+}
+
+table.dataTable tbody tr:hover {
+  background-color: #4a4a4a !important;
+}
+
+/* ── Responsive: tablet ──────────────────────────────────────────────────── */
+
+@media (max-width: 992px) {
+  .bslib-value-box .value-box-value { font-size: 1.2rem !important; }
+  .bslib-value-box .value-box-title { font-size: 0.65rem !important; }
+}
+
+/* ── Responsive: móvil ───────────────────────────────────────────────────── */
+
+@media (max-width: 576px) {
+  .bslib-value-box .value-box-value { font-size: 1rem !important; }
+  .bslib-value-box .value-box-title { font-size: 0.6rem !important; }
+
   .quarto-dashboard .bslib-column {
     flex: 0 0 100% !important;
     max-width: 100% !important;
