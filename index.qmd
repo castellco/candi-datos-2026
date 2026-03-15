@@ -31,28 +31,36 @@ library(stringr)
 library(janitor)
 
 options(scipen = 999)
-
-theme_set(theme_minimal(base_size = 14, base_family = "Cabin"))
 source("assets/theme_castellco.R")
 
-# Aplica fondo oscuro a cualquier ggplotly
+# Fondo oscuro para cualquier ggplotly
 oscuro <- function(p) {
   p |> layout(
     paper_bgcolor = background_oscuro,
     plot_bgcolor  = background_oscuro,
-    font  = list(color = blanco, family = font_family),
-    xaxis = list(color = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro),
-    yaxis = list(color = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro),
-    legend = list(font = list(color = blanco))
+    font   = list(color = blanco, family = font_family),
+    xaxis  = list(color = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro),
+    yaxis  = list(color = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro),
+    legend = list(font = list(color = blanco)),
+    margin = list(l = 10, r = 10, t = 40, b = 10)
   )
 }
 
-# Crea un value_box con el color del tema
+# Value box con color del tema
 vbox <- function(title, value) {
   bslib::value_box(
     title = title,
     value = value,
     theme = bslib::value_box_theme(bg = rojo, fg = blanco)
+  )
+}
+
+# Convierte "S/ 1,234.56" o "S/1234.56" o "1234" a numérico
+parsear_soles <- function(x) {
+  suppressWarnings(
+    as.numeric(
+      str_replace_all(str_remove_all(x, "S/|S\\.?/|\\s"), ",", "")
+    )
   )
 }
 ```
@@ -77,16 +85,6 @@ for (tabla in tablas) {
      SELECT * FROM read_csv_auto('data/{tabla}.csv', normalize_names = true)"
   )))
 }
-
-invisible(dbExecute(con,
-  "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS total_ingresos_num DOUBLE"
-))
-invisible(dbExecute(con, "
-  UPDATE candidatos
-  SET total_ingresos_num = TRY_CAST(
-    NULLIF(REPLACE(REPLACE(total_ingresos, 'S/ ', ''), ',', ''), '') AS DOUBLE
-  )
-"))
 ```
 
 ```{r}
@@ -94,21 +92,37 @@ invisible(dbExecute(con, "
 #| context: setup
 #| include: false
 
-# janitor::clean_names() garantiza snake_case consistente
-# independientemente de cómo DuckDB normalice los nombres
+# ── Candidatos ───────────────────────────────────────────────────────────────
 candidatos <- dbGetQuery(con, "SELECT * FROM candidatos") |> clean_names()
 
-# Listas para los filtros
+# Diagnóstico: imprime nombres y muestra de total_ingresos en consola
+message("=== COLUMNAS ===\n", paste(names(candidatos), collapse = " | "))
+message("=== total_ingresos (primeros 5) ===\n",
+        paste(head(candidatos$total_ingresos, 5), collapse = " | "))
+
+candidatos <- candidatos |>
+  mutate(total_ingresos_num = parsear_soles(total_ingresos))
+
+message("=== NAs en total_ingresos_num: ",
+        sum(is.na(candidatos$total_ingresos_num)),
+        " de ", nrow(candidatos), " ===")
+
+# ── Sentencias (tabla relacional) ────────────────────────────────────────────
+sentencias_df <- dbGetQuery(con, "SELECT * FROM sentencias") |> clean_names()
+
+message("=== COLUMNAS SENTENCIAS ===\n", paste(names(sentencias_df), collapse = " | "))
+
+# ── Listas para filtros ──────────────────────────────────────────────────────
 partidos_list <- sort(unique(candidatos$partido[!is.na(candidatos$partido)]))
 sexos_list    <- sort(unique(candidatos$sexo[!is.na(candidatos$sexo)]))
 deps_list     <- sort(unique(candidatos$departamento[!is.na(candidatos$departamento)]))
 cargos_list   <- sort(unique(candidatos$cargo_al_que_postula[!is.na(candidatos$cargo_al_que_postula)]))
 
-# Longitud media de nombres de partido (para truncar etiquetas en ejes)
-partidos_label_length <- round(mean(nchar(partidos_list)), 0)
+cargos_presidenciales <- cargos_list[
+  str_detect(cargos_list, regex("president|vicepres", ignore_case = TRUE))
+]
 
-# Cargo presidencial puede tener múltiples valores
-cargos_presidenciales <- cargos_list[str_detect(cargos_list, "(?i)president|vicepres")]
+partidos_label_length <- round(mean(nchar(partidos_list)), 0)
 ```
 
 # {.sidebar}
@@ -119,30 +133,24 @@ Filtra los datos:
 #| label: sidebar-filtros
 
 selectInput("dep", "Departamento",
-  choices  = c("Todos" = "__ALL__", deps_list),
-  selected = "__ALL__"
+  choices = c("Todos" = "__ALL__", deps_list), selected = "__ALL__"
 )
-
 selectInput("partido", "Partido",
-  choices  = c("Todos" = "__ALL__", partidos_list),
-  selected = "__ALL__"
+  choices = c("Todos" = "__ALL__", partidos_list), selected = "__ALL__"
 )
-
 selectInput("cargo", "Cargo",
-  choices  = c("Todos" = "__ALL__", cargos_list),
-  selected = "__ALL__"
+  choices = c("Todos" = "__ALL__", cargos_list), selected = "__ALL__"
 )
-
 checkboxGroupInput("sexo", "Sexo",
-  choices  = sexos_list,
-  selected = sexos_list,
-  inline   = TRUE
+  choices = sexos_list, selected = sexos_list, inline = TRUE
 )
-
 radioButtons("sentencia_filter", "Sentencias",
   choices  = c("Todos" = "todos", "Con sentencias" = "con", "Sin sentencias" = "sin"),
-  selected = "todos",
-  inline   = TRUE
+  selected = "todos", inline = TRUE
+)
+hr()
+actionButton("limpiar_click", "✕ Limpiar filtro de gráfico",
+  class = "btn-sm btn-outline-secondary w-100"
 )
 ```
 
@@ -151,9 +159,7 @@ radioButtons("sentencia_filter", "Sentencias",
 **Fuente:** [JNE — Voto Informado](https://votoinformado.jne.gob.pe)  
 Datos al 1 de marzo de 2026
 
-[X](https://x.com/castellco_) ·
-[LinkedIn](https://www.linkedin.com/in/cornejocastellano) ·
-[GitHub](https://github.com/castellco)
+[X](https://x.com/castellco_) · [LinkedIn](https://www.linkedin.com/in/cornejocastellano) · [GitHub](https://github.com/castellco)
 
 ```{r}
 #| label: server
@@ -163,257 +169,346 @@ Datos al 1 de marzo de 2026
 
 fc <- reactive({
   req(input$sexo)
+  d <- candidatos |> filter(sexo %in% input$sexo)
+  if (!identical(input$dep,     "__ALL__")) d <- d |> filter(departamento         == input$dep)
+  if (!identical(input$partido, "__ALL__")) d <- d |> filter(partido              == input$partido)
+  if (!identical(input$cargo,   "__ALL__")) d <- d |> filter(cargo_al_que_postula == input$cargo)
+  if (input$sentencia_filter == "con")      d <- d |> filter(sentencias == 1)
+  if (input$sentencia_filter == "sin")      d <- d |> filter(sentencias == 0 | is.na(sentencias))
+  d
+})
 
-  d <- candidatos |>
-    filter(sexo %in% input$sexo)
+# ── Click-to-filter en tabla ─────────────────────────────────────────────────
 
-  if (!identical(input$dep, "__ALL__"))
-    d <- d |> filter(departamento == input$dep)
+partido_click <- reactiveVal(NULL)
 
-  if (!identical(input$partido, "__ALL__"))
-    d <- d |> filter(partido == input$partido)
+observeEvent(event_data("plotly_click", source = "plot_ingresos"), {
+  cl <- event_data("plotly_click", source = "plot_ingresos")
+  if (!is.null(cl$y)) partido_click(cl$y)
+})
+observeEvent(event_data("plotly_click", source = "plot_sentencias"), {
+  cl <- event_data("plotly_click", source = "plot_sentencias")
+  if (!is.null(cl$y)) partido_click(cl$y)
+})
+observeEvent(input$limpiar_click, partido_click(NULL))
 
-  if (!identical(input$cargo, "__ALL__"))
-    d <- d |> filter(cargo_al_que_postula == input$cargo)
-
-  if (input$sentencia_filter == "con")
-    d <- d |> filter(sentencias == 1)
-  else if (input$sentencia_filter == "sin")
-    d <- d |> filter(sentencias == 0 | is.na(sentencias))
-
+fc_tabla <- reactive({
+  d <- fc()
+  if (!is.null(partido_click())) d <- d |> filter(partido == partido_click())
   d
 })
 
 # ── Value boxes ──────────────────────────────────────────────────────────────
 
-output$vb_total <- renderUI(
-  vbox("Candidatos", n_distinct(fc()$dni))
-)
+output$vb_total      <- renderUI(vbox("Candidatos",        n_distinct(fc()$dni)))
+output$vb_diputados  <- renderUI(vbox("Diputados/as",      sum(fc()$cargo_al_que_postula == "Diputados",        na.rm = TRUE)))
+output$vb_senadores  <- renderUI(vbox("Senadores/as",      sum(fc()$cargo_al_que_postula == "Senadores",        na.rm = TRUE)))
+output$vb_andino     <- renderUI(vbox("Parlamento Andino", sum(fc()$cargo_al_que_postula == "Parlamento Andino", na.rm = TRUE)))
+output$vb_presidencia <- renderUI(vbox("Presidencia",      sum(fc()$cargo_al_que_postula %in% cargos_presidenciales, na.rm = TRUE)))
+output$vb_partidos   <- renderUI(vbox("Partidos",          n_distinct(fc()$partido)))
+output$vb_sentencias <- renderUI(vbox("Con sentencias",    sum(fc()$sentencias == 1, na.rm = TRUE)))
 
-output$vb_diputados <- renderUI(
-  vbox("Diputados/as",
-    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Diputados"]))
-)
-
-output$vb_senadores <- renderUI(
-  vbox("Senadores/as",
-    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Senadores"]))
-)
-
-output$vb_andino <- renderUI(
-  vbox("Parlamento Andino",
-    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Parlamento Andino"]))
-)
-
-output$vb_presidencia <- renderUI(
-  vbox("Presidencia",
-    n_distinct(fc()$dni[fc()$cargo_al_que_postula %in% cargos_presidenciales]))
-)
-
-output$vb_partidos <- renderUI(
-  vbox("Partidos", n_distinct(fc()$partido))
-)
-
-output$vb_sentencias <- renderUI(
-  vbox("Con sentencias", sum(fc()$sentencias == 1, na.rm = TRUE))
-)
-
-# ── Gráfico 1: Ingreso promedio por partido ──────────────────────────────────
+# ── Plot 1: Ingreso promedio por partido ─────────────────────────────────────
 
 output$plot_ingresos_partido <- renderPlotly({
-  datos <- fc() |>
+  d <- fc() |> filter(!is.na(total_ingresos_num), total_ingresos_num > 0)
+
+  validate(need(nrow(d) > 0, "Sin datos de ingresos. Revisa la consola para diagnóstico."))
+
+  datos <- d |>
     summarise(
-      promedio = mean(total_ingresos_num, na.rm = TRUE),
-      total    = sum(total_ingresos_num, na.rm = TRUE),
+      promedio = mean(total_ingresos_num),
+      total    = sum(total_ingresos_num),
       n_cand   = n_distinct(dni),
       .by = partido
     ) |>
-    filter(!is.na(promedio)) |>
     arrange(promedio) |>
     mutate(
       partido_f = reorder(partido, promedio),
       etiqueta  = dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1),
-      y_label   = promedio + max(promedio, na.rm = TRUE) * 0.03
+      y_label   = promedio + max(promedio) * 0.03
     )
-
-  validate(need(nrow(datos) > 0, "Sin datos para mostrar."))
 
   p <- datos |>
     ggplot(aes(
       x = partido_f, y = promedio,
-      text = paste0(
-        partido, "<br>",
-        "Promedio: ", etiqueta, "<br>",
-        "N candidatos: ", n_cand, "<br>",
-        "Total declarado: ", dollar(total, prefix = "S/ ", big.mark = ",", accuracy = 1)
-      )
+      text = paste0(partido, "\nPromedio: ", etiqueta, "\nN: ", n_cand)
     )) +
     geom_segment(aes(xend = partido_f, y = 0, yend = promedio),
       inherit.aes = FALSE, color = blanco, linewidth = 0.8) +
     geom_tile(aes(y = y_label),
-      width = 0.7, height = max(datos$promedio, na.rm = TRUE) * 0.05,
+      width = 0.7, height = max(datos$promedio) * 0.05,
       fill = rojo, color = blanco, linewidth = 0.2) +
-    geom_text(aes(y = y_label, label = etiqueta),
-      color = blanco, size = 1.8) +
+    geom_text(aes(y = y_label, label = etiqueta), color = blanco, size = 1.8) +
     coord_flip() +
-    labs(title = "Ingreso promedio declarado",
-         subtitle = "Por partido político · en soles (S/)") +
+    labs(title = "Ingreso promedio por partido", subtitle = "En soles (S/) · click en barra para filtrar tabla") +
     scale_x_discrete(labels = \(x) str_trunc(x, partidos_label_length)) +
     theme_castellco(rayas = "verticales", fondo = "oscuro")
 
-  ggplotly(p, tooltip = "text") |> oscuro()
+  ggplotly(p, tooltip = "text", source = "plot_ingresos") |>
+    oscuro() |> event_register("plotly_click")
 })
 
-# ── Gráfico 2: Ingreso promedio por cargo y sexo ─────────────────────────────
+# ── Plot 2: Treemap ingreso por cargo y sexo ─────────────────────────────────
 
-output$plot_ingresos_sexo <- renderPlotly({
-  datos <- fc() |>
-    filter(!is.na(total_ingresos_num), !is.na(sexo)) |>
+output$plot_treemap <- renderPlotly({
+  d <- fc() |> filter(!is.na(total_ingresos_num), !is.na(sexo), total_ingresos_num > 0)
+
+  validate(need(nrow(d) > 0, "Sin datos para mostrar."))
+
+  cargos_dat <- d |>
     summarise(
-      promedio = mean(total_ingresos_num, na.rm = TRUE),
+      promedio = mean(total_ingresos_num),
       n        = n_distinct(dni),
       .by = c(cargo_al_que_postula, sexo)
+    ) |>
+    mutate(
+      id     = paste(sexo, cargo_al_que_postula, sep = "___"),
+      label  = paste0(str_trunc(cargo_al_que_postula, 22),
+                      "\nS/ ", comma(round(promedio))),
+      parent = sexo,
+      text   = paste0(cargo_al_que_postula, " · ", sexo,
+                      "\nPromedio: ", dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1),
+                      "\nCandidatos: ", n)
     )
 
-  validate(need(nrow(datos) > 0, "Sin datos para mostrar."))
+  sexos_dat <- cargos_dat |>
+    summarise(promedio = mean(promedio), n = sum(n), .by = sexo) |>
+    mutate(
+      id     = sexo,
+      label  = sexo,
+      parent = "",
+      text   = paste0(sexo, "\nPromedio: ",
+                      dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1))
+    )
 
-  p <- datos |>
-    ggplot(aes(
-      x    = cargo_al_que_postula,
-      y    = promedio,
-      fill = sexo,
-      text = paste0(
-        cargo_al_que_postula, " · ", sexo, "<br>",
-        "Promedio: ", dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1), "<br>",
-        "N candidatos: ", n
-      )
-    )) +
-    geom_col(position = "dodge") +
-    scale_fill_manual(values = c("Femenino" = azul, "Masculino" = amarillo),
-                      name = NULL) +
-    coord_flip() +
-    labs(title = "Ingreso promedio por cargo y sexo",
-         subtitle = "Mujeres vs. hombres") +
-    theme_castellco(rayas = "verticales", fondo = "oscuro") +
-    theme(legend.position = "top")
+  nodos <- bind_rows(
+    select(sexos_dat,  id, label, parent, values = promedio, text),
+    select(cargos_dat, id, label, parent, values = promedio, text)
+  )
 
-  ggplotly(p, tooltip = "text") |> oscuro()
+  plot_ly(
+    data       = nodos,
+    ids        = ~id,
+    labels     = ~label,
+    parents    = ~parent,
+    values     = ~values,
+    type       = "treemap",
+    text       = ~text,
+    hoverinfo  = "text",
+    textinfo   = "label",
+    marker     = list(
+      colorscale = list(c(0, azul), c(1, amarillo)),
+      line       = list(color = background_oscuro, width = 1)
+    ),
+    pathbar    = list(visible = FALSE)
+  ) |>
+  layout(
+    title       = list(text = "Ingreso promedio por cargo y sexo",
+                       font = list(color = blanco, size = 14), x = 0),
+    paper_bgcolor = background_oscuro,
+    plot_bgcolor  = background_oscuro,
+    font          = list(color = blanco, family = font_family),
+    margin        = list(l = 10, r = 10, t = 40, b = 10)
+  )
 })
 
-# ── Gráfico 3: Candidatos con sentencias por partido ────────────────────────
+# ── Plot 3: Candidatos con sentencias por partido ────────────────────────────
 
-output$plot_sentencias <- renderPlotly({
+output$plot_sentencias_partido <- renderPlotly({
   datos <- fc() |>
-    summarise(
-      con_sentencia = sum(sentencias == 1, na.rm = TRUE),
-      total         = n_distinct(dni),
-      .by = partido
-    ) |>
-    filter(con_sentencia > 0) |>
-    arrange(con_sentencia) |>
-    mutate(partido_f = reorder(partido, con_sentencia))
+    summarise(n = sum(sentencias == 1, na.rm = TRUE), total = n_distinct(dni), .by = partido) |>
+    filter(n > 0) |>
+    arrange(n) |>
+    mutate(partido_f = reorder(partido, n))
 
-  validate(need(nrow(datos) > 0, "Ningún candidato con sentencias en la selección actual."))
+  validate(need(nrow(datos) > 0, "Sin candidatos con sentencias en la selección."))
 
   p <- datos |>
     ggplot(aes(
-      x    = partido_f,
-      y    = con_sentencia,
-      text = paste0(partido, "<br>Con sentencias: ", con_sentencia, " de ", total)
+      x = partido_f, y = n,
+      text = paste0(partido, "\nCon sentencias: ", n, " de ", total)
     )) +
     geom_col(fill = amarillo) +
     coord_flip() +
-    labs(title = "Candidatos con sentencias",
-         subtitle = "Solo partidos con al menos 1 sentencia registrada") +
+    labs(title = "Candidatos con sentencias por partido",
+         subtitle = "Click en barra para filtrar tabla") +
     scale_x_discrete(labels = \(x) str_trunc(x, partidos_label_length)) +
     theme_castellco(rayas = "verticales", fondo = "oscuro")
 
-  ggplotly(p, tooltip = "text") |> oscuro()
+  ggplotly(p, tooltip = "text", source = "plot_sentencias") |>
+    oscuro() |> event_register("plotly_click")
 })
 
-# ── Gráfico 4: Nivel educativo ───────────────────────────────────────────────
+# ── Plot 4: Nivel educativo (números absolutos) ───────────────────────────────
 
 output$plot_educacion <- renderPlotly({
-  d    <- fc()
+  d     <- fc()
   total <- n_distinct(d$dni)
 
   validate(need(total > 0, "Sin datos para mostrar."))
 
-  # Calcula % para cada nivel. Los nombres vienen de clean_names()
+  # Usa los nombres exactos post-clean_names().
+  # Si alguno falla, aparecerá como NA y el validate lo atrapará.
   datos <- tibble(
-    nivel = c(
-      "Ed. Básica", "Técnica", "No universitaria",
-      "Universitaria", "Posgrado"
-    ),
-    pct = c(
-      mean(d$tiene_educacion_basica == 1, na.rm = TRUE),
-      mean(d$ed_t_cnica == 1, na.rm = TRUE),       # "Ed Técnica" → ed_t_cnica con clean_names
-      mean(d$ed_no_univ == 1, na.rm = TRUE),
-      mean(d$ed_universitaria == 1, na.rm = TRUE),
-      mean(d$ed_posgrado == 1, na.rm = TRUE)
+    nivel = c("Posgrado", "Universitaria", "No universitaria", "Técnica", "Ed. Básica"),
+    n = c(
+      sum(d$ed_posgrado            == 1, na.rm = TRUE),
+      sum(d$ed_universitaria       == 1, na.rm = TRUE),
+      sum(d$ed_no_univ             == 1, na.rm = TRUE),
+      sum(d$ed_tecnica             == 1, na.rm = TRUE),
+      sum(d$tiene_educacion_basica == 1, na.rm = TRUE)
     )
   ) |>
-    arrange(pct) |>
-    mutate(
-      nivel_f  = reorder(nivel, pct),
-      etiqueta = percent(pct, accuracy = 1)
-    )
+    arrange(n) |>
+    mutate(nivel_f = reorder(nivel, n))
 
   p <- datos |>
     ggplot(aes(
-      x    = nivel_f,
-      y    = pct,
-      text = paste0(nivel, ": ", etiqueta)
+      x = nivel_f, y = n,
+      text = paste0(nivel, ": ", comma(n), " candidatos")
     )) +
     geom_col(fill = azul) +
-    geom_text(aes(label = etiqueta), hjust = -0.15, color = blanco, size = 3) +
+    geom_text(aes(label = comma(n)), hjust = -0.15, color = blanco, size = 3) +
     coord_flip() +
-    scale_y_continuous(labels = percent_format(), limits = c(0, 1.1)) +
+    scale_y_continuous(labels = comma, limits = c(0, max(datos$n) * 1.15)) +
     labs(title = "Nivel educativo",
-         subtitle = paste0("% del total de ", comma(total), " candidatos en la selección")) +
+         subtitle = paste0("Candidatos con cada nivel · total selección: ", comma(total))) +
     theme_castellco(rayas = "verticales", fondo = "oscuro")
 
   ggplotly(p, tooltip = "text") |> oscuro()
 })
 
-# ── Tabla de candidatos ──────────────────────────────────────────────────────
+# ── Plot 5: Ranking de materias de sentencias ────────────────────────────────
+
+output$plot_ranking_sentencias <- renderPlotly({
+  dnis_fc <- fc()$dni
+
+  sent <- sentencias_df |>
+    filter(dni %in% dnis_fc)
+
+  validate(need(nrow(sent) > 0, "Sin sentencias en la selección actual."))
+
+  # Nombre exacto de la columna puede ser sentencia_materia o similar
+  # Lo detectamos dinámicamente
+  col_materia <- names(sent)[str_detect(names(sent), "materia")]
+  col_fallo   <- names(sent)[str_detect(names(sent), "fallo")]
+
+  validate(
+    need(length(col_materia) > 0, "No se encontró columna 'materia' en sentencias."),
+    need(length(col_fallo)   > 0, "No se encontró columna 'fallo' en sentencias.")
+  )
+
+  datos <- sent |>
+    rename(materia = !!col_materia[1], fallo = !!col_fallo[1]) |>
+    filter(!is.na(materia)) |>
+    count(materia, name = "n") |>
+    arrange(n) |>
+    mutate(materia_f = reorder(materia, n))
+
+  p <- datos |>
+    ggplot(aes(
+      x = materia_f, y = n,
+      text = paste0(materia, ": ", n, " sentencias")
+    )) +
+    geom_col(fill = rojo) +
+    coord_flip() +
+    labs(title = "Ranking de sentencias",
+         subtitle = "Por materia de la demanda") +
+    theme_castellco(rayas = "verticales", fondo = "oscuro")
+
+  ggplotly(p, tooltip = "text") |> oscuro()
+})
+
+# ── Plot 6: Sin trayectoria con mayores ingresos ──────────────────────────────
+
+output$plot_sin_trayectoria <- renderPlotly({
+  datos <- fc() |>
+    filter(
+      (exp_laboral        == 0 | is.na(exp_laboral)),
+      (cargos_partidarios == 0 | is.na(cargos_partidarios)),
+      (eleccion_popular   == 0 | is.na(eleccion_popular)),
+      !is.na(total_ingresos_num),
+      total_ingresos_num > 0
+    ) |>
+    arrange(desc(total_ingresos_num)) |>
+    slice_head(n = 25) |>
+    mutate(
+      etiqueta  = dollar(total_ingresos_num, prefix = "S/ ", big.mark = ",", accuracy = 1),
+      nombre_f  = reorder(
+        paste0(str_trunc(nombre, 22), "\n(", str_trunc(partido, 18), ")"),
+        total_ingresos_num
+      )
+    )
+
+  validate(need(nrow(datos) > 0,
+    "No hay candidatos sin trayectoria declarada en la selección."))
+
+  p <- datos |>
+    ggplot(aes(
+      x = nombre_f, y = total_ingresos_num,
+      text = paste0(
+        nombre, "\n", partido, "\n",
+        cargo_al_que_postula, "\n",
+        "Ingresos: ", etiqueta
+      )
+    )) +
+    geom_col(fill = amarillo) +
+    coord_flip() +
+    scale_y_continuous(
+      labels = \(x) dollar(x, prefix = "S/ ", big.mark = ",", accuracy = 1)
+    ) +
+    labs(
+      title    = "Sin trayectoria declarada · mayores ingresos",
+      subtitle = "Sin exp. laboral, cargos partidarios ni elección popular · top 25"
+    ) +
+    theme_castellco(rayas = "verticales", fondo = "oscuro")
+
+  ggplotly(p, tooltip = "text") |> oscuro()
+})
+
+# ── Tabla ────────────────────────────────────────────────────────────────────
 
 output$tabla_candidatos <- DT::renderDT({
+  d     <- fc_tabla()
+  activo <- partido_click()
 
-  fc() |>
+  d |>
     transmute(
-      Nombre                  = nombre,
-      DNI                     = dni,
-      Cargo                   = cargo_al_que_postula,
-      Partido                 = partido,
-      Departamento            = departamento,
-      Sexo                    = sexo,
-      `Ed. Básica`            = tiene_educacion_basica,
-      `Ed. Técnica`           = ed_t_cnica,
-      `Ed. No Univ.`          = ed_no_univ,
-      `Ed. Universitaria`     = ed_universitaria,
-      `Ed. Posgrado`          = ed_posgrado,
-      `Exp. Laboral`          = exp_laboral,
-      `Cargos Partidarios`    = cargos_partidarios,
-      `Elección Popular`      = eleccion_popular,
-      Sentencias              = sentencias,
-      Bienes                  = bienes,
-      `Total Ingresos`        = total_ingresos,
+      Nombre               = nombre,
+      DNI                  = dni,
+      Cargo                = cargo_al_que_postula,
+      Partido              = partido,
+      Departamento         = departamento,
+      Sexo                 = sexo,
+      `Ed. Básica`         = tiene_educacion_basica,
+      `Ed. Técnica`        = ed_tecnica,
+      `Ed. No Univ.`       = ed_no_univ,
+      `Ed. Universitaria`  = ed_universitaria,
+      `Ed. Posgrado`       = ed_posgrado,
+      `Exp. Laboral`       = exp_laboral,
+      `Cargos Part.`       = cargos_partidarios,
+      `Elec. Popular`      = eleccion_popular,
+      Sentencias           = sentencias,
+      Bienes               = bienes,
+      `Total Ingresos`     = total_ingresos,
       Ficha = ifelse(
         !is.na(url) & url != "",
-        sprintf('<a href="%s" target="_blank">Ver →</a>', url),
-        ""
+        sprintf('<a href="%s" target="_blank">Ver →</a>', url), "—"
       )
     ) |>
     DT::datatable(
       escape   = FALSE,
       rownames = FALSE,
-      filter   = "top",
-      options  = list(
-        pageLength = 20,
-        scrollX    = TRUE,
-        dom        = "frtip",
-        language   = list(
+      caption  = if (!is.null(activo))
+        htmltools::tags$caption(
+          style = "color:#be2e1c; font-style:italic; font-size:0.85rem;",
+          paste0("Filtrado por: ", activo,
+                 " · Haz clic en 'Limpiar filtro de gráfico' para ver todos")
+        ),
+      options = list(
+        pageLength = 15, scrollX = TRUE, dom = "frtip",
+        language = list(
           url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
         )
       )
@@ -421,9 +516,9 @@ output$tabla_candidatos <- DT::renderDT({
 })
 ```
 
-# Resumen
+# Inicio
 
-## Cards {height="14%"}
+## Cards {height="80px"}
 
 ```{r}
 uiOutput("vb_total")
@@ -447,35 +542,45 @@ uiOutput("vb_partidos")
 uiOutput("vb_sentencias")
 ```
 
-## Row {height="43%"}
+## Row
 
 ```{r}
-#| title: "Ingreso promedio por partido"
-plotlyOutput("plot_ingresos_partido", height = "100%")
+#| title: "Ingreso promedio por partido · click para filtrar"
+plotlyOutput("plot_ingresos_partido", height = "500px")
 ```
 
 ```{r}
 #| title: "Ingreso promedio por cargo y sexo"
-plotlyOutput("plot_ingresos_sexo", height = "100%")
+plotlyOutput("plot_treemap", height = "500px")
 ```
 
-## Row {height="43%"}
+## Row
 
 ```{r}
-#| title: "Candidatos con sentencias por partido"
-plotlyOutput("plot_sentencias", height = "100%")
+#| title: "Candidatos con sentencias por partido · click para filtrar"
+plotlyOutput("plot_sentencias_partido", height = "450px")
 ```
 
 ```{r}
-#| title: "Nivel educativo"
-plotlyOutput("plot_educacion", height = "100%")
+#| title: "Nivel educativo (candidatos)"
+plotlyOutput("plot_educacion", height = "450px")
 ```
 
-# Candidatos
-
-## Row {height="100%"}
+## Row
 
 ```{r}
-#| title: "Tabla de candidatos"
-DT::DTOutput("tabla_candidatos", height = "100%")
+#| title: "Ranking de sentencias por materia"
+plotlyOutput("plot_ranking_sentencias", height = "400px")
+```
+
+```{r}
+#| title: "Sin trayectoria declarada · mayores ingresos"
+plotlyOutput("plot_sin_trayectoria", height = "400px")
+```
+
+## Row
+
+```{r}
+#| title: "Candidatos"
+DT::DTOutput("tabla_candidatos", height = "600px")
 ```
