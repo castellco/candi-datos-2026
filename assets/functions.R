@@ -10,8 +10,6 @@ library(magick)
 
 # systemfonts::system_fonts() |> View()
 
-# barras rojas ------------------------------------------------------------
-head <- image_read("assets/bar.png")
 # fuente ------------------------------------------------------------------
 font_family = "Cabin"
 caption_sep = " ■ "

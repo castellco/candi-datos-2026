@@ -33,20 +33,40 @@ library(janitor)
 options(scipen = 999)
 source("assets/theme_castellco.R")
 
-# Aplica fondo oscuro a un objeto plotly
-# t = 50 para que el título nunca quede cortado
-oscuro <- function(p) {
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+# Fondo oscuro para cualquier plot_ly nativo.
+# Incluye fuente Cabin en todos los elementos de texto.
+oscuro <- function(p, t = 80) {
   p |> layout(
     paper_bgcolor = background_oscuro,
     plot_bgcolor  = background_oscuro,
-    font   = list(color = blanco, family = font_family),
-    xaxis  = list(color = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro),
-    yaxis  = list(color = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro),
-    legend = list(font = list(color = blanco)),
-    margin = list(l = 5, r = 10, t = 50, b = 5)
+    font   = list(color = blanco, family = "Cabin", size = 12),
+    xaxis  = list(
+      color     = blanco, gridcolor = gris_claro, zerolinecolor = gris_claro,
+      tickfont  = list(family = "Cabin"),
+      titlefont = list(family = "Cabin")
+    ),
+    yaxis  = list(
+      color    = blanco, gridcolor = "transparent",
+      tickfont = list(family = "Cabin"), dtick = 1, automargin = TRUE
+    ),
+    legend = list(font = list(color = blanco, family = "Cabin")),
+    margin = list(l = 5, r = 15, t = t, b = 5)
   )
 }
 
+# Título centrado y grande para plot_ly
+titulo_plotly <- function(texto, subtitulo = NULL) {
+  txt <- if (!is.null(subtitulo))
+    paste0("<b>", texto, "</b><br><sup>", subtitulo, "</sup>")
+  else
+    paste0("<b>", texto, "</b>")
+
+  list(text = txt, font = list(color = blanco, family = "Cabin", size = 20), x = 0.5, xanchor = "center")
+}
+
+# Value box con colores del tema
 vbox <- function(title, value) {
   bslib::value_box(
     title = title,
@@ -54,6 +74,9 @@ vbox <- function(title, value) {
     theme = bslib::value_box_theme(bg = rojo, fg = blanco)
   )
 }
+
+# N candidatos únicos como texto para subtítulo
+n_label <- function(d) paste0("N = ", comma(n_distinct(d$dni)), " candidatos")
 ```
 
 ```{r}
@@ -92,8 +115,23 @@ candidatos <- dbGetQuery(con, "SELECT * FROM candidatos") |>
   )
 
 sentencias_df <- dbGetQuery(con, "SELECT * FROM sentencias") |> clean_names()
-# columnas confirmadas: dni, id_candidato, sentencia_materia, sentencia_fallo
+# columnas: dni, id_candidato, sentencia_materia, sentencia_fallo
 
+# Tabla de experiencia laboral: calculamos años por entrada y luego sumamos por DNI
+exp_laboral_raw <- dbGetQuery(con, "SELECT * FROM experiencia_laboral") |> clean_names()
+
+exp_anos_por_dni <- exp_laboral_raw |>
+  mutate(
+    anio_inicio = suppressWarnings(as.numeric(str_extract(exp_laboral_periodo, "^\\d{4}"))),
+    anio_fin    = suppressWarnings(as.numeric(str_extract(exp_laboral_periodo, "\\d{4}$"))),
+    anos        = if_else(!is.na(anio_inicio) & !is.na(anio_fin),
+                          as.numeric(anio_fin - anio_inicio + 1), NA_real_)
+  ) |>
+  filter(!is.na(anos), anos >= 0, anos <= 60) |>
+  group_by(dni) |>
+  summarise(total_anos_exp = sum(anos, na.rm = TRUE), .groups = "drop")
+
+# Listas para filtros
 partidos_list <- sort(unique(candidatos$partido[!is.na(candidatos$partido)]))
 sexos_list    <- sort(unique(candidatos$sexo[!is.na(candidatos$sexo)]))
 deps_list     <- sort(unique(candidatos$departamento[!is.na(candidatos$departamento)]))
@@ -113,18 +151,19 @@ Filtra los datos:
 #| label: sidebar-filtros
 selectInput("dep", "Departamento",
   choices = c("Todos" = "__ALL__", deps_list), selected = "__ALL__")
+
 selectInput("partido", "Partido",
   choices = c("Todos" = "__ALL__", partidos_list), selected = "__ALL__")
+
 selectInput("cargo", "Cargo",
   choices = c("Todos" = "__ALL__", cargos_list), selected = "__ALL__")
+
 checkboxGroupInput("sexo", "Sexo",
   choices = sexos_list, selected = sexos_list, inline = TRUE)
+
 radioButtons("sentencia_filter", "Sentencias",
   choices  = c("Todos" = "todos", "Con sentencias" = "con", "Sin sentencias" = "sin"),
   selected = "todos", inline = TRUE)
-hr()
-actionButton("limpiar_click", "✕ Limpiar filtro de gráfico",
-  class = "btn-sm btn-outline-secondary w-100")
 ```
 
 ---
@@ -151,9 +190,10 @@ fc <- reactive({
   d
 })
 
-# ── Click-to-filter ───────────────────────────────────────────────────────────
-# customdata lleva el nombre completo del partido (no truncado)
-# y lo recuperamos con event_data()$customdata
+# Candidatos únicos (deduplicados por DNI)
+fc_uniq <- reactive(fc() |> distinct(dni, .keep_all = TRUE))
+
+# ── Click-to-filter en tabla ──────────────────────────────────────────────────
 
 partido_click <- reactiveVal(NULL)
 
@@ -165,10 +205,9 @@ observeEvent(event_data("plotly_click", source = "src_sentencias"), {
   cl <- event_data("plotly_click", source = "src_sentencias")
   if (!is.null(cl$customdata)) partido_click(cl$customdata)
 })
-observeEvent(input$limpiar_click, partido_click(NULL))
 
 fc_tabla <- reactive({
-  d <- fc()
+  d <- fc_uniq()
   if (!is.null(partido_click())) d <- d |> filter(partido == partido_click())
   d
 })
@@ -184,26 +223,23 @@ output$vb_partidos    <- renderUI(vbox("Partidos",          n_distinct(fc()$part
 output$vb_sentencias  <- renderUI(vbox("Con sentencias",    n_distinct(fc()$dni[fc()$sentencias == 1])))
 
 # ── 1. Ingreso promedio por partido ───────────────────────────────────────────
-# Sin geom_tile (problemático con ggplotly) — solo lollipop + label de texto
 
 output$plot_ingresos_partido <- renderPlotly({
-  d <- fc() |>
-    distinct(dni, .keep_all = TRUE) |>
-    filter(!is.na(total_ingresos_num))
+  d <- fc_uniq() |> filter(!is.na(total_ingresos_num))
 
-  validate(need(nrow(d) > 0, "Sin datos de ingresos."))
+  validate(need(nrow(d) > 0, "Sin datos de ingresos para la selección actual."))
 
   datos <- d |>
     summarise(
-      promedio   = mean(total_ingresos_num),
-      total      = sum(total_ingresos_num),
-      n_cand     = n_distinct(dni),
+      promedio = mean(total_ingresos_num),
+      total    = sum(total_ingresos_num),
+      n_cand   = n_distinct(dni),
       .by = partido
     ) |>
-    arrange(promedio) |>
+    arrange(promedio) |>                                   # ascendente → mayor queda arriba en plotly
     mutate(
-      label_eje  = str_trunc(partido, partidos_label_length),
-      etiqueta   = dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1)
+      label_eje = str_trunc(partido, partidos_label_length),
+      etiqueta  = dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1)
     )
 
   plot_ly(datos,
@@ -213,42 +249,38 @@ output$plot_ingresos_partido <- renderPlotly({
     source      = "src_ingresos",
     type        = "bar",
     orientation = "h",
-    marker      = list(color = rojo, line = list(color = rojo)),
-    text        = ~paste0(partido,
-                          "<br>Promedio: ", etiqueta,
+    marker      = list(color = rojo),
+    text        = ~paste0(partido, "<br>Promedio: ", etiqueta,
                           "<br>Candidatos: ", n_cand,
                           "<br>Total: ", dollar(total, prefix = "S/ ", big.mark = ",", accuracy = 1)),
     hoverinfo   = "text",
     textposition = "none"
   ) |>
   layout(
-    title  = list(
-      text = "Ingreso promedio declarado por partido<br><sup>En soles (S/) · click en barra para filtrar tabla</sup>",
-      font = list(color = blanco, size = 13, family = font_family),
-      x = 0
+    title = titulo_plotly(
+      "Ingreso promedio declarado por partido",
+      paste0("En soles (S/) · ", n_label(d), " · click en barra para filtrar tabla")
     ),
-    xaxis  = list(
-      title      = "",
-      color      = blanco,
-      gridcolor  = gris_claro,
-      tickformat = ",.0f",
-      tickprefix = "S/ "
+    xaxis = list(
+      color = blanco, gridcolor = gris_claro,
+      tickformat = ",.0f", tickprefix = "S/ ",
+      tickfont = list(family = "Cabin")
     ),
-    yaxis  = list(title = "", color = blanco, gridcolor = "transparent"),
-    paper_bgcolor = background_oscuro,
-    plot_bgcolor  = background_oscuro,
-    font          = list(color = blanco, family = font_family),
-    margin        = list(l = 5, r = 10, t = 80, b = 5)
+    yaxis = list(
+      color = blanco, gridcolor = "transparent",
+      tickfont = list(family = "Cabin"), dtick = 1, automargin = TRUE
+    ),
+    paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
+    font = list(color = blanco, family = "Cabin"),
+    margin = list(l = 5, r = 15, t = 90, b = 5)
   ) |>
   event_register("plotly_click")
 })
 
 # ── 2. Treemap: ingreso promedio por sexo ─────────────────────────────────────
-# FIXME no hace match con el dashboard de PBI
+
 output$plot_treemap <- renderPlotly({
-  d <- fc() |>
-    distinct(dni, .keep_all = TRUE) |>
-    filter(!is.na(total_ingresos_num), !is.na(sexo))
+  d <- fc_uniq() |> filter(!is.na(total_ingresos_num), !is.na(sexo))
 
   validate(need(nrow(d) > 0, "Sin datos para mostrar."))
 
@@ -261,44 +293,40 @@ output$plot_treemap <- renderPlotly({
     mutate(
       label = paste0(
         "<b>", sexo, "</b><br>",
-        dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1), "<br>",
-        comma(n), " candidatos"
+        dollar(promedio, prefix = "S/ ", big.mark = ",", accuracy = 1),
+        "<br>", comma(n), " candidatos"
       )
     )
 
   plot_ly(
-    data      = datos,
-    labels    = ~sexo,
-    parents   = ~"",
-    values    = ~promedio,
-    type      = "treemap",
-    text      = ~label,
-    hoverinfo = "text",
-    textinfo  = "text",
-    marker    = list(
-      colors = c(blanco, rojo),
-      line   = list(color = background_oscuro, width = 2)
+    data = datos,
+    labels = ~sexo, parents = ~"", values = ~promedio,
+    type = "treemap", text = ~label, hoverinfo = "text", textinfo = "text",
+    marker = list(
+      colors = c(rojo, amarillo),
+      line   = list(color = background_oscuro, width = 3)
     ),
     pathbar = list(visible = FALSE)
   ) |>
   layout(
     title = list(
-      text = "Ingreso promedio declarado por sexo",
-      font = list(color = blanco, size = 13, family = font_family),
-      x    = 0
+      text = paste0("<b>Ingreso promedio por sexo</b><br>",
+                    "<sup>", n_label(d), "</sup>"),
+      font = list(color = blanco, family = "Cabin", size = 20),
+      x = 0.5, xanchor = "center"
     ),
     paper_bgcolor = background_oscuro,
-    plot_bgcolor  = background_oscuro,
-    font          = list(color = blanco, family = font_family),
-    margin        = list(l = 5, r = 5, t = 60, b = 5)
+    font = list(color = blanco, family = "Cabin"),
+    margin = list(l = 5, r = 5, t = 90, b = 5)
   )
 })
 
-# ── 3. Sentencias por partido ─────────────────────────────────────────────────
+# ── 3. Candidatos con sentencias por partido ──────────────────────────────────
 
 output$plot_sentencias_partido <- renderPlotly({
-  datos <- fc() |>
-    distinct(dni, .keep_all = TRUE) |>
+  d <- fc_uniq()
+
+  datos <- d |>
     summarise(n = sum(sentencias == 1, na.rm = TRUE), total = n_distinct(dni), .by = partido) |>
     filter(n > 0) |>
     arrange(n) |>
@@ -307,34 +335,29 @@ output$plot_sentencias_partido <- renderPlotly({
   validate(need(nrow(datos) > 0, "Sin candidatos con sentencias en la selección."))
 
   plot_ly(datos,
-    x           = ~n,
-    y           = ~reorder(label_eje, n),
-    customdata  = ~partido,
-    source      = "src_sentencias",
-    type        = "bar",
-    orientation = "h",
-    marker      = list(color = rojo),
-    text        = ~paste0(partido, "<br>Con sentencias: ", n, " de ", total),
-    hoverinfo   = "text",
-    textposition = "none"
+    x = ~n, y = ~reorder(label_eje, n),
+    customdata = ~partido, source = "src_sentencias",
+    type = "bar", orientation = "h",
+    marker = list(color = rojo),
+    text = ~paste0(partido, "<br>Con sentencias: ", n, " de ", total),
+    hoverinfo = "text", textposition = "none"
   ) |>
   layout(
-    title = list(
-      text = "Candidatos con sentencias por partido<br><sup>Click en barra para filtrar tabla</sup>",
-      font = list(color = blanco, size = 13, family = font_family),
-      x    = 0
+    title = titulo_plotly(
+      "Candidatos con sentencias por partido",
+      paste0(n_label(d), " · click en barra para filtrar tabla")
     ),
-    xaxis = list(title = "", color = blanco, gridcolor = gris_claro),
-    yaxis = list(title = "", color = blanco, gridcolor = "transparent"),
-    paper_bgcolor = background_oscuro,
-    plot_bgcolor  = background_oscuro,
-    font   = list(color = blanco, family = font_family),
-    margin = list(l = 5, r = 10, t = 80, b = 5)
+    xaxis = list(color = blanco, gridcolor = gris_claro, tickfont = list(family = "Cabin")),
+    yaxis = list(color = blanco, gridcolor = "transparent",
+                 tickfont = list(family = "Cabin"), dtick = 1, automargin = TRUE),
+    paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
+    font = list(color = blanco, family = "Cabin"),
+    margin = list(l = 5, r = 15, t = 90, b = 5)
   ) |>
   event_register("plotly_click")
 })
 
-# ── 4. Ranking de sentencias por materia ──────────────────────────────────────
+# ── 4. Ranking sentencias por materia (top 10) ────────────────────────────────
 
 output$plot_ranking_sentencias <- renderPlotly({
   dnis_fc <- unique(fc()$dni)
@@ -342,94 +365,87 @@ output$plot_ranking_sentencias <- renderPlotly({
   datos <- sentencias_df |>
     filter(dni %in% dnis_fc, !is.na(sentencia_materia)) |>
     count(sentencia_materia, name = "n") |>
-    arrange(n)
+    arrange(n) |>
+    slice_tail(n = 10)                                     # top 10 (más frecuentes)
 
   validate(need(nrow(datos) > 0, "Sin sentencias en la selección actual."))
 
+  n_sent <- sum(datos$n)
+
   plot_ly(datos,
-    x           = ~n,
-    y           = ~reorder(sentencia_materia, n),
-    type        = "bar",
-    orientation = "h",
-    marker      = list(color = rojo),
-    text        = ~paste0(sentencia_materia, ": ", n, " sentencias"),
-    hoverinfo   = "text",
-    textposition = "none"
+    x = ~n, y = ~reorder(sentencia_materia, n),
+    type = "bar", orientation = "h",
+    marker = list(color = amarillo),
+    text = ~paste0(sentencia_materia, ": ", n, " sentencias"),
+    hoverinfo = "text", textposition = "none"
   ) |>
   layout(
-    title = list(
-      text = "Ranking de sentencias por materia",
-      font = list(color = blanco, size = 13, family = font_family),
-      x    = 0
+    title = titulo_plotly(
+      "Ranking de sentencias por materia",
+      paste0("Top 10 materias · ", n_sent, " sentencias totales en la selección")
     ),
-    xaxis = list(title = "", color = blanco, gridcolor = gris_claro),
-    yaxis = list(title = "", color = blanco, gridcolor = "transparent"),
-    paper_bgcolor = background_oscuro,
-    plot_bgcolor  = background_oscuro,
-    font   = list(color = blanco, family = font_family),
-    margin = list(l = 5, r = 10, t = 70, b = 5)
+    xaxis = list(color = blanco, gridcolor = gris_claro, tickfont = list(family = "Cabin")),
+    yaxis = list(color = blanco, gridcolor = "transparent",
+                 tickfont = list(family = "Cabin"), dtick = 1, automargin = TRUE),
+    paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
+    font = list(color = blanco, family = "Cabin"),
+    margin = list(l = 5, r = 15, t = 90, b = 5)
   )
 })
 
+# ── 5. Promedio de años de experiencia laboral por partido ────────────────────
 
-# ── 5. Nivel educativo ────────────────────────────────────────────────────────
-#TOdO reemplazar por ranking de promedio de años de experiencia laboral
-output$plot_educacion <- renderPlotly({
-  d     <- fc() |> distinct(dni, .keep_all = TRUE)
-  total <- nrow(d)
+output$plot_exp_laboral <- renderPlotly({
+  d <- fc_uniq() |>
+    left_join(exp_anos_por_dni, by = "dni") |>
+    filter(!is.na(total_anos_exp))
 
-  validate(need(total > 0, "Sin datos para mostrar."))
+  validate(need(nrow(d) > 0, "Sin datos de experiencia laboral para la selección."))
 
-  datos <- tibble(
-    nivel = c("Ed. Básica", "Técnica", "No universitaria", "Universitaria", "Posgrado"),
-    n = c(
-      sum(d$tiene_educacion_basica == 1, na.rm = TRUE),
-      sum(d$ed_tecnica             == 1, na.rm = TRUE),
-      sum(d$ed_no_univ             == 1, na.rm = TRUE),
-      sum(d$ed_universitaria       == 1, na.rm = TRUE),
-      sum(d$ed_posgrado            == 1, na.rm = TRUE)
+  datos <- d |>
+    summarise(
+      promedio_exp = mean(total_anos_exp),
+      n_cand       = n_distinct(dni),
+      .by = partido
+    ) |>
+    arrange(promedio_exp) |>
+    mutate(
+      label_eje = str_trunc(partido, partidos_label_length),
+      etiqueta  = round(promedio_exp, 1)
     )
-  ) |> arrange(n)
 
   plot_ly(datos,
-    x           = ~n,
-    y           = ~reorder(nivel, n),
-    type        = "bar",
-    orientation = "h",
-    marker      = list(color = rojo),
-    text        = ~paste0(nivel, ": ", comma(n), " candidatos"),
-    hoverinfo   = "text",
-    textposition = "none"
+    x = ~promedio_exp, y = ~reorder(label_eje, promedio_exp),
+    type = "bar", orientation = "h",
+    marker = list(color = amarillo),
+    text = ~paste0(partido, "<br>Promedio: ", etiqueta, " años<br>Candidatos: ", n_cand),
+    hoverinfo = "text", textposition = "none"
   ) |>
   add_annotations(
-    x         = ~n,
-    y         = ~reorder(nivel, n),
-    text      = ~comma(n),
-    xanchor   = "left",
-    xshift    = 5,
-    showarrow = FALSE,
-    font      = list(color = blanco, size = 11)
+    x = ~promedio_exp, y = ~reorder(label_eje, promedio_exp),
+    text = ~paste0(etiqueta, " años"),
+    xanchor = "left", xshift = 5, showarrow = FALSE,
+    font = list(color = blanco, size = 10, family = "Cabin")
   ) |>
   layout(
-    title = list(
-      text = paste0("Nivel educativo · total selección: ", comma(total)),
-      font = list(color = blanco, size = 13, family = font_family),
-      x    = 0
+    title = titulo_plotly(
+      "Promedio de años de experiencia laboral por partido",
+      paste0(n_label(d), " con experiencia declarada")
     ),
-    xaxis = list(title = "", color = blanco, gridcolor = gris_claro),
-    yaxis = list(title = "", color = blanco, gridcolor = "transparent"),
-    paper_bgcolor = background_oscuro,
-    plot_bgcolor  = background_oscuro,
-    font   = list(color = blanco, family = font_family),
-    margin = list(l = 5, r = 50, t = 70, b = 5)
+    xaxis = list(color = blanco, gridcolor = gris_claro,
+                 ticksuffix = " años", tickfont = list(family = "Cabin")),
+    yaxis = list(color = blanco, gridcolor = "transparent",
+                 tickfont = list(family = "Cabin"), dtick = 1, automargin = TRUE),
+    paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
+    font = list(color = blanco, family = "Cabin"),
+    margin = list(l = 5, r = 80, t = 90, b = 5)
   )
 })
 
-# ── 6. Sin trayectoria · mayores ingresos ─────────────────────────────────────
-# TODO explicar mejor este gráfico como comentario o subtítulo
+# ── 6. Sin trayectoria declarada · mayores ingresos (top 10) ─────────────────
+
 output$plot_sin_trayectoria <- renderPlotly({
-  datos <- fc() |>
-    distinct(dni, .keep_all = TRUE) |>
+  datos <- fc_uniq() |>
     filter(
       (exp_laboral        == 0 | is.na(exp_laboral)),
       (cargos_partidarios == 0 | is.na(cargos_partidarios)),
@@ -438,55 +454,88 @@ output$plot_sin_trayectoria <- renderPlotly({
       total_ingresos_num > 0
     ) |>
     arrange(desc(total_ingresos_num)) |>
-    slice_head(n = 25) |>
+    slice_head(n = 10) |>
     mutate(
-      etiqueta = dollar(total_ingresos_num, prefix = "S/ ", big.mark = ",", accuracy = 1),
-      label_eje = paste0(str_trunc(nombre, 22), " (", str_trunc(partido, 15), ")")
-    )
+      etiqueta  = dollar(total_ingresos_num, prefix = "S/ ", big.mark = ",", accuracy = 1),
+      label_eje = paste0(str_trunc(nombre, 22), " (", str_trunc(partido, 14), ")")
+    ) |>
+    arrange(total_ingresos_num)                            # ascendente para que mayor quede arriba
 
   validate(need(nrow(datos) > 0,
     "No hay candidatos sin trayectoria declarada en la selección."))
 
   plot_ly(datos,
-    x           = ~total_ingresos_num,
-    y           = ~reorder(label_eje, total_ingresos_num),
-    type        = "bar",
-    orientation = "h",
-    marker      = list(color = rojo),
-    text        = ~paste0(nombre, "<br>", partido, "<br>",
-                          cargo_al_que_postula, "<br>Ingresos: ", etiqueta),
-    hoverinfo   = "text",
-    textposition = "none"
+    x = ~total_ingresos_num, y = ~reorder(label_eje, total_ingresos_num),
+    type = "bar", orientation = "h",
+    marker = list(color = rojo),
+    text = ~paste0(
+      nombre, "<br>", partido, "<br>", cargo_al_que_postula,
+      "<br>Ingresos declarados: ", etiqueta
+    ),
+    hoverinfo = "text", textposition = "none"
   ) |>
   layout(
-    title = list(
-      text = "Sin trayectoria declarada · mayores ingresos<br><sup>Sin exp. laboral, cargos partidarios ni elección popular · top 25</sup>",
-      font = list(color = blanco, size = 13, family = font_family),
-      x    = 0
+    title = titulo_plotly(
+      "Sin trayectoria declarada · mayores ingresos",
+      paste0(
+        "Top 10 candidatos que no declararon exp. laboral, cargos partidarios ",
+        "ni elección popular, ordenados por ingresos totales declarados ante el JNE"
+      )
     ),
     xaxis = list(
-      title      = "",
-      color      = blanco,
-      gridcolor  = gris_claro,
-      tickformat = ",.0f",
-      tickprefix = "S/ "
+      color = blanco, gridcolor = gris_claro,
+      tickformat = ",.0f", tickprefix = "S/ ",
+      tickfont = list(family = "Cabin")
     ),
-    yaxis = list(title = "", color = blanco, gridcolor = "transparent"),
-    paper_bgcolor = background_oscuro,
-    plot_bgcolor  = background_oscuro,
-    font   = list(color = blanco, family = font_family),
-    margin = list(l = 5, r = 10, t = 70, b = 5)
+    yaxis = list(color = blanco, gridcolor = "transparent",
+                 tickfont = list(family = "Cabin"), dtick = 1, automargin = TRUE),
+    paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
+    font = list(color = blanco, family = "Cabin"),
+    margin = list(l = 5, r = 15, t = 100, b = 5)
   )
 })
 
-# ── 7. Tabla ──────────────────────────────────────────────────────────────────
-# TODO la tabla debe ser capaz de sortearse por ingresos y de hacer filtros en todas las columnas. Agregar el comentario: 1 significa sí, 0 significa no. 
-# FIXME en la parte inferior de la tabla, no se puede ver la selección de tab de la tabla, porque está en blanco.
+# ── 7. Tabla de candidatos ────────────────────────────────────────────────────
+
+DT_OPCIONES <- list(
+  pageLength = 15,
+  scrollX    = TRUE,
+  dom        = "frtip",
+  rowCallback = JS("
+    function(row, data) {
+      $(row).css({'background-color': '#383838', 'color': '#ffffff'});
+      $('td', row).css({'border-color': '#464743'});
+    }
+  "),
+  initComplete = JS("
+    function(settings, json) {
+      var api = this.api();
+      $(api.table().header()).css({
+        'background-color': '#464743',
+        'color': '#ffffff',
+        'border-bottom': '2px solid #be2e1c'
+      });
+      $(api.table().node()).css('background-color', '#383838');
+      // Paginación y conteo también en blanco
+      $(api.table().container()).find('.dataTables_info, .dataTables_paginate, .paginate_button')
+        .css({'color': '#ffffff', 'background-color': '#383838'});
+    }
+  "),
+  drawCallback = JS("
+    function(settings) {
+      $('.dataTables_paginate, .dataTables_info').css({'color': '#ffffff'});
+      $('.paginate_button').css({'color': '#ffffff !important'});
+    }
+  "),
+  language = list(
+    url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+  )
+)
+
 output$tabla_candidatos <- DT::renderDT({
   activo <- partido_click()
 
-  fc_tabla() |>
-    distinct(dni, .keep_all = TRUE) |>
+  d <- fc_tabla() |>
     transmute(
       Nombre               = nombre,
       DNI                  = dni,
@@ -504,53 +553,72 @@ output$tabla_candidatos <- DT::renderDT({
       `Elec. Popular`      = eleccion_popular,
       Sentencias           = sentencias,
       Bienes               = bienes,
-      `Total Ingresos`     = total_ingresos,
+      `Total Ingresos`     = total_ingresos_num,          # numérico → sorteo correcto
       Ficha = ifelse(
         !is.na(url) & url != "",
         sprintf('<a href="%s" target="_blank" style="color:#febd17">Ver →</a>', url), "—"
       )
-    ) |>
-    DT::datatable(
-      escape   = FALSE,
-      rownames = FALSE,
-      caption  = if (!is.null(activo))
+    )
+
+  dt <- DT::datatable(
+    d,
+    escape   = FALSE,
+    rownames = FALSE,
+    caption  = htmltools::tagList(
+      if (!is.null(activo))
         htmltools::tags$caption(
           style = "color:#febd17; font-style:italic; font-size:0.85rem; text-align:left;",
-          paste0("Filtrado por: ", activo,
-                 "  ·  Haz clic en 'Limpiar filtro de gráfico' para ver todos")
+          paste0("Filtrado por: ", activo, " · Cambia el filtro 'Partido' en la barra lateral para ver todos")
         ),
-      options = list(
-        pageLength = 15,
-        scrollX    = TRUE,
-        dom        = "frtip",
-        # Forzar fondo y color de texto en cada fila — necesario porque
-        # el tema litera sobreescribe los estilos de DT
-        rowCallback = JS("
-          function(row, data) {
-            $(row).css({'background-color': '#383838', 'color': '#ffffff'});
-            $('td', row).css({'border-color': '#464743'});
-          }
-        "),
-        initComplete = JS("
-          function(settings, json) {
-            var api = this.api();
-            $(api.table().header()).css({
-              'background-color': '#464743',
-              'color': '#ffffff',
-              'border-bottom': '2px solid #be2e1c'
-            });
-            $(api.table().node()).css('background-color', '#383838');
-            $('.dataTables_wrapper').css('color', '#ffffff');
-          }
-        "),
-        language = list(
-          url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
-        )
+      htmltools::tags$caption(
+        style = "color:#aaaaaa; font-size:0.8rem; text-align:left;",
+        "1 = sí, 0 = no en columnas de educación, experiencia y sentencias."
       )
-    )
+    ),
+    options = DT_OPCIONES
+  ) |>
+  DT::formatCurrency(
+    columns  = "Total Ingresos",
+    currency = "S/ ",
+    interval = 3, mark = ",", digits = 0, before = TRUE
+  )
+
+  dt
 })
 
-# TODO crear un sendo tab que emule la segunda tabla de pbi
+# ── 8. Tabla resumen por partido ──────────────────────────────────────────────
+
+output$tabla_partidos <- DT::renderDT({
+  d <- fc_uniq() |>
+    left_join(exp_anos_por_dni, by = "dni")
+
+  resumen <- d |>
+    summarise(
+      `Candidatos`              = n_distinct(dni),
+      `Hombres`                 = n_distinct(dni[sexo == "Masculino"]),
+      `Mujeres`                 = n_distinct(dni[sexo == "Femenino"]),
+      `Sin ed. básica`          = sum(tiene_educacion_basica == 0 | is.na(tiene_educacion_basica)),
+      `Sin estudios superiores` = sum(
+        (ed_universitaria == 0 | is.na(ed_universitaria)) &
+        (ed_tecnica       == 0 | is.na(ed_tecnica)) &
+        (ed_no_univ       == 0 | is.na(ed_no_univ)) &
+        (ed_posgrado      == 0 | is.na(ed_posgrado))
+      ),
+      `Prom. años exp. laboral` = round(mean(total_anos_exp, na.rm = TRUE), 1),
+      `Con sentencias`          = sum(sentencias == 1, na.rm = TRUE),
+      `Ingreso promedio`        = mean(total_ingresos_num, na.rm = TRUE),
+      .by = partido
+    ) |>
+    arrange(desc(`Ingreso promedio`)) |>
+    rename(Partido = partido)
+
+  DT::datatable(
+    resumen,
+    rownames = FALSE,
+    options = DT_OPCIONES
+  ) |>
+  DT::formatCurrency("Ingreso promedio", currency = "S/ ", interval = 3, mark = ",", digits = 0)
+})
 ```
 
 # Inicio
@@ -582,34 +650,40 @@ uiOutput("vb_sentencias")
 ## Row
 
 ```{r}
-plotlyOutput("plot_ingresos_partido", height = "520px", width = "100%")
+plotlyOutput("plot_ingresos_partido", height = "550px", width = "100%")
 ```
 ```{r}
-plotlyOutput("plot_treemap", height = "520px", width = "100%")
-```
-
-## Row
-
-```{r}
-plotlyOutput("plot_sentencias_partido", height = "480px", width = "100%")
-```
-
-```{r}
-plotlyOutput("plot_ranking_sentencias", height = "420px", width = "100%")
+plotlyOutput("plot_treemap", height = "550px", width = "100%")
 ```
 
 ## Row
 
 ```{r}
-plotlyOutput("plot_educacion", height = "480px", width = "100%")
+plotlyOutput("plot_sentencias_partido", height = "500px", width = "100%")
+```
+```{r}
+plotlyOutput("plot_ranking_sentencias", height = "500px", width = "100%")
 ```
 
+## Row
+
 ```{r}
-plotlyOutput("plot_sin_trayectoria", height = "420px", width = "100%")
+plotlyOutput("plot_exp_laboral", height = "550px", width = "100%")
+```
+```{r}
+plotlyOutput("plot_sin_trayectoria", height = "500px", width = "100%")
 ```
 
 ## Row
 
 ```{r}
 DT::DTOutput("tabla_candidatos", width = "100%")
+```
+
+# Resumen por partido
+
+## Row
+
+```{r}
+DT::DTOutput("tabla_partidos", width = "100%")
 ```
