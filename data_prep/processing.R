@@ -43,12 +43,11 @@ tablas_db <- dbGetQuery(con, "SHOW TABLES")
 print(tablas_db)
 
 
-
 # N candidatos ------------------------------------------------------------
 
 ### Nivel nacional --------------------------------------------------------
 nro_candidatos <- dbGetQuery(
-  con, 
+  con,
   "
   SELECT COUNT (DISTINCT dni) FROM candidatos
   "
@@ -57,29 +56,34 @@ nro_candidatos <- dbGetQuery(
 print(paste("Cantidad de candidatos en estas elecciones:", nro_candidatos))
 
 
-
 ### Diputados -------------------------------------------------------------
 nro_candidatos_diputados <- dbGetQuery(
-  con, 
+  con,
   "
   SELECT COUNT (DISTINCT dni) FROM candidatos
   WHERE cargo_al_que_postula = 'Diputados'
   "
 )
 
-print(paste("Cantidad de candidatos que postulan como Diputados:", nro_candidatos_diputados))
+print(paste(
+  "Cantidad de candidatos que postulan como Diputados:",
+  nro_candidatos_diputados
+))
 
 
 ### Senadores -------------------------------------------------------------
 nro_candidatos_senadores <- dbGetQuery(
-  con, 
+  con,
   "
   SELECT COUNT (DISTINCT dni) FROM candidatos
   WHERE cargo_al_que_postula = 'Senadores'
   "
 )
 
-print(paste("Cantidad de candidatos que postulan como Senadores:", nro_candidatos_senadores))
+print(paste(
+  "Cantidad de candidatos que postulan como Senadores:",
+  nro_candidatos_senadores
+))
 
 
 ### Parlamento Andino -----------------------------------------------------
@@ -94,14 +98,12 @@ nro_candidatos_andino <- dbGetQuery(
 
 # candidatos con sentencias -----------------------------------------------
 
-
 nro_candidatos_sentencias <- dbGetQuery(
   con,
   "SELECT COUNT(DISTINCT dni) AS n
    FROM sentencias"
 )
 nro_candidatos_sentencias
-
 
 
 #  ------------------------------------------------------------------------

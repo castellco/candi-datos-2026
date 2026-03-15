@@ -1,0 +1,111 @@
+/*-- scss:defaults --*/
+
+@import url('https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&family=Cabin&display=swap');
+
+$font-family-sans-serif: "Cabin", sans-serif;
+$headings-font-family:   "Special Gothic Expanded One", sans-serif;
+
+$navbar-bg:  #383838 !default;
+$navbar-fg:  #ffffff !default;
+$primary:    #be2e1c;
+$link-color: #be2e1c;
+
+/*-- scss:rules --*/
+
+.navbar-container {
+  height: 75px;
+}
+
+.navbar-title {
+  font-family: "Special Gothic Expanded One", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* ── Value boxes ─────────────────────────────────────────── */
+
+.bslib-value-box {
+  min-height: 0 !important;
+}
+
+.bslib-value-box .value-box-grid {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.bslib-value-box .value-box-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+}
+
+/* número arriba */
+.bslib-value-box .value-box-value {
+  order: 1;
+  font-size: 1.6rem !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+
+/* título abajo */
+.bslib-value-box .value-box-title {
+  order: 2;
+  font-size: 0.75rem !important;
+  line-height: 1.2 !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+/* ── Cards generales ─────────────────────────────────────── */
+
+.bslib-card .card-body p {
+  font-size: 0.9rem;
+}
+
+/* ── Responsividad ───────────────────────────────────────── */
+
+/* Los gráficos ggplot llenan su contenedor */
+.bslib-card .card-body img,
+.bslib-card .card-body .shiny-plot-output {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Plotly y htmlwidgets también */
+.bslib-card .card-body .plotly,
+.bslib-card .card-body .html-widget {
+  width: 100% !important;
+}
+
+/* Tablet: reducir fuente de valores */
+@media (max-width: 992px) {
+  .bslib-value-box .value-box-value {
+    font-size: 1.3rem !important;
+  }
+  .bslib-value-box .value-box-title {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Móvil: apilar columnas, ajustar fuentes */
+@media (max-width: 576px) {
+  .bslib-value-box .value-box-value {
+    font-size: 1.1rem !important;
+  }
+  .bslib-value-box .value-box-title {
+    font-size: 0.65rem !important;
+  }
+
+  /* En móvil los cards de gráficos ocupan todo el ancho */
+  .quarto-dashboard .bslib-column {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}

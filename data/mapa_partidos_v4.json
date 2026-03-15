@@ -1,0 +1,235 @@
+{
+  "mapa": {
+    "AHORA NACION - AN": "2980",
+    "ALIANZA ELECTORAL VENCEREMOS": "3025",
+    "ALIANZA PARA EL PROGRESO": "1257",
+    "AVANZA PAIS - PARTIDO DE INTEGRACION SOCIAL": "2173",
+    "FRENTE POPULAR AGRICOLA FIA DEL PERU": "2901",
+    "FUERZA POPULAR": "1366",
+    "FUERZA Y LIBERTAD": "3024",
+    "LIBERTAD POPULAR": "2933",
+    "PARTIDO APRISTA PERUANO": "2930",
+    "PARTIDO DE LOS TRABAJADORES Y EMPRENDEDORES PTE - PERU": "2939",
+    "PARTIDO DEL BUEN GOBIERNO": "2961",
+    "PARTIDO DEMOCRATA UNIDO PERU": "2867",
+    "PARTIDO DEMOCRATA VERDE": "2895",
+    "PARTIDO DEMOCRATICO FEDERAL": "2986",
+    "PARTIDO DEMOCRATICO SOMOS PERU": "14",
+    "PARTIDO FRENTE DE LA ESPERANZA 2021": "2857",
+    "PARTIDO MORADO": "2840",
+    "PARTIDO PAIS PARA TODOS": "2956",
+    "PARTIDO PATRIOTICO DEL PERU": "2869",
+    "PARTIDO POLITICO COOPERACION POPULAR": "2995",
+    "PARTIDO POLITICO INTEGRIDAD DEMOCRATICA": "2985",
+    "PARTIDO POLITICO NACIONAL PERU LIBRE": "2218",
+    "PARTIDO POLITICO PERU ACCION": "2932",
+    "PARTIDO POLITICO PERU PRIMERO": "2925",
+    "PARTIDO POLITICO PRIN": "2921",
+    "PERU MODERNO": "2924",
+    "PODEMOS PERU": "2731",
+    "PRIMERO LA GENTE - COMUNIDAD, ECOLOGIA, LIBERTAD Y PROGRESO": "2931",
+    "PROGRESEMOS": "2967",
+    "RENOVACION POPULAR": "22",
+    "UN CAMINO DIFERENTE": "2998",
+    "UNIDAD NACIONAL": "3023",
+    "FE EN EL PERU": "2898",
+    "JUNTOS POR EL PERU": "1264",
+    "PARTIDO CIVICO OBRAS": "2941",
+    "SALVEMOS AL PERU": "2927",
+    "PARTIDO SICREO": "2935",
+    "PARTIDO CIUDADANOS POR EL PERU": "2968",
+    "LOGO PARTIDO": "3023"
+  },
+  "info": [
+    {
+      "nombre": "AHORA NACION - AN",
+      "partido_id": "2980",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2980"
+    },
+    {
+      "nombre": "ALIANZA ELECTORAL VENCEREMOS",
+      "partido_id": "3025",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/3025"
+    },
+    {
+      "nombre": "ALIANZA PARA EL PROGRESO",
+      "partido_id": "1257",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/1257"
+    },
+    {
+      "nombre": "AVANZA PAIS - PARTIDO DE INTEGRACION SOCIAL",
+      "partido_id": "2173",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2173"
+    },
+    {
+      "nombre": "FRENTE POPULAR AGRICOLA FIA DEL PERU",
+      "partido_id": "2901",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2901"
+    },
+    {
+      "nombre": "FUERZA POPULAR",
+      "partido_id": "1366",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/1366"
+    },
+    {
+      "nombre": "FUERZA Y LIBERTAD",
+      "partido_id": "3024",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/3024"
+    },
+    {
+      "nombre": "LIBERTAD POPULAR",
+      "partido_id": "2933",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2933"
+    },
+    {
+      "nombre": "PARTIDO APRISTA PERUANO",
+      "partido_id": "2930",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2930"
+    },
+    {
+      "nombre": "PARTIDO DE LOS TRABAJADORES Y EMPRENDEDORES PTE - PERU",
+      "partido_id": "2939",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2939"
+    },
+    {
+      "nombre": "PARTIDO DEL BUEN GOBIERNO",
+      "partido_id": "2961",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2961"
+    },
+    {
+      "nombre": "PARTIDO DEMOCRATA UNIDO PERU",
+      "partido_id": "2867",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2867"
+    },
+    {
+      "nombre": "PARTIDO DEMOCRATA VERDE",
+      "partido_id": "2895",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2895"
+    },
+    {
+      "nombre": "PARTIDO DEMOCRATICO FEDERAL",
+      "partido_id": "2986",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2986"
+    },
+    {
+      "nombre": "PARTIDO DEMOCRATICO SOMOS PERU",
+      "partido_id": "14",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/14"
+    },
+    {
+      "nombre": "PARTIDO FRENTE DE LA ESPERANZA 2021",
+      "partido_id": "2857",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2857"
+    },
+    {
+      "nombre": "PARTIDO MORADO",
+      "partido_id": "2840",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2840"
+    },
+    {
+      "nombre": "PARTIDO PAIS PARA TODOS",
+      "partido_id": "2956",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2956"
+    },
+    {
+      "nombre": "PARTIDO PATRIOTICO DEL PERU",
+      "partido_id": "2869",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2869"
+    },
+    {
+      "nombre": "PARTIDO POLITICO COOPERACION POPULAR",
+      "partido_id": "2995",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2995"
+    },
+    {
+      "nombre": "PARTIDO POLITICO INTEGRIDAD DEMOCRATICA",
+      "partido_id": "2985",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2985"
+    },
+    {
+      "nombre": "PARTIDO POLITICO NACIONAL PERU LIBRE",
+      "partido_id": "2218",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2218"
+    },
+    {
+      "nombre": "PARTIDO POLITICO PERU ACCION",
+      "partido_id": "2932",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2932"
+    },
+    {
+      "nombre": "PARTIDO POLITICO PERU PRIMERO",
+      "partido_id": "2925",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2925"
+    },
+    {
+      "nombre": "PARTIDO POLITICO PRIN",
+      "partido_id": "2921",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2921"
+    },
+    {
+      "nombre": "PERU MODERNO",
+      "partido_id": "2924",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2924"
+    },
+    {
+      "nombre": "PODEMOS PERU",
+      "partido_id": "2731",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2731"
+    },
+    {
+      "nombre": "PRIMERO LA GENTE - COMUNIDAD, ECOLOGIA, LIBERTAD Y PROGRESO",
+      "partido_id": "2931",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2931"
+    },
+    {
+      "nombre": "PROGRESEMOS",
+      "partido_id": "2967",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2967"
+    },
+    {
+      "nombre": "RENOVACION POPULAR",
+      "partido_id": "22",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/22"
+    },
+    {
+      "nombre": "UN CAMINO DIFERENTE",
+      "partido_id": "2998",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2998"
+    },
+    {
+      "nombre": "UNIDAD NACIONAL",
+      "partido_id": "3023",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/3023"
+    },
+    {
+      "nombre": "FE EN EL PERU",
+      "partido_id": "2898",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2898"
+    },
+    {
+      "nombre": "JUNTOS POR EL PERU",
+      "partido_id": "1264",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/1264"
+    },
+    {
+      "nombre": "PARTIDO CIVICO OBRAS",
+      "partido_id": "2941",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2941"
+    },
+    {
+      "nombre": "SALVEMOS AL PERU",
+      "partido_id": "2927",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2927"
+    },
+    {
+      "nombre": "PARTIDO SICREO",
+      "partido_id": "2935",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2935"
+    },
+    {
+      "nombre": "PARTIDO CIUDADANOS POR EL PERU",
+      "partido_id": "2968",
+      "logo_url": "https://sroppublico.jne.gob.pe/Consulta/Simbolo/GetSimbolo/2968"
+    }
+  ]
+}
