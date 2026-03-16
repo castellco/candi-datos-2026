@@ -4,7 +4,7 @@
 
 $font-family-sans-serif: "Cabin", sans-serif;
 $headings-font-family:   "Special Gothic Expanded One", sans-serif;
-$navbar-bg:              #383838 !default;
+$navbar-bg:              #272626 !default;
 $navbar-fg:              #ffffff !default;
 $primary:                #be2e1c;
 $link-color:             #be2e1c;
@@ -17,6 +17,37 @@ body, .quarto-dashboard, .card, .card-body,
 .sidebar-content, .nav-link, input, select, label, button {
   font-family: "Cabin", sans-serif !important;
 }
+
+.quarto-dashboard main,
+.quarto-dashboard .bslib-page-fill,
+.quarto-dashboard .tab-content,
+.quarto-dashboard .tab-pane {
+  background-color: #272626 !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* El body y html también pueden tener fondo blanco */
+html, body {
+  background-color: #383838 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.bslib-gap-spacing {
+  background-color: #383838 !important;
+  --bslib-spacer: 0;
+}
+
+
+.bslib-sidebar-layout > .main {
+  --_main-bg: #383838 !important;
+  background-color: #383838 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
 
 /* ── Navbar ──────────────────────────────────────────────────────────────── */
 

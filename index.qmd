@@ -259,7 +259,7 @@ output$plot_ingresos_partido <- renderPlotly({
   layout(
     title = titulo_plotly(
       "Ingreso promedio declarado por partido",
-      paste0("En soles (S/) · ", n_label(d), " · click en barra para filtrar tabla")
+      paste0("En soles (S/) · ", n_label(d))
     ),
     xaxis = list(
       color = blanco, gridcolor = gris_claro,
@@ -303,7 +303,7 @@ output$plot_treemap <- renderPlotly({
     labels = ~sexo, parents = ~"", values = ~promedio,
     type = "treemap", text = ~label, hoverinfo = "text", textinfo = "text",
     marker = list(
-      colors = c(rojo, amarillo),
+      colors = c(rojo, blanco),
       line   = list(color = background_oscuro, width = 3)
     ),
     pathbar = list(visible = FALSE)
@@ -345,7 +345,7 @@ output$plot_sentencias_partido <- renderPlotly({
   layout(
     title = titulo_plotly(
       "Candidatos con sentencias por partido",
-      paste0(n_label(d), " · click en barra para filtrar tabla")
+      paste0(n_label(d))
     ),
     xaxis = list(color = blanco, gridcolor = gris_claro, tickfont = list(family = "Cabin")),
     yaxis = list(color = blanco, gridcolor = "transparent",
@@ -375,7 +375,7 @@ output$plot_ranking_sentencias <- renderPlotly({
   plot_ly(datos,
     x = ~n, y = ~reorder(sentencia_materia, n),
     type = "bar", orientation = "h",
-    marker = list(color = amarillo),
+    marker = list(color = blanco),
     text = ~paste0(sentencia_materia, ": ", n, " sentencias"),
     hoverinfo = "text", textposition = "none"
   ) |>
@@ -417,7 +417,7 @@ output$plot_exp_laboral <- renderPlotly({
   plot_ly(datos,
     x = ~promedio_exp, y = ~reorder(label_eje, promedio_exp),
     type = "bar", orientation = "h",
-    marker = list(color = amarillo),
+    marker = list(color = blanco),
     text = ~paste0(partido, "<br>Promedio: ", etiqueta, " años<br>Candidatos: ", n_cand),
     hoverinfo = "text", textposition = "none"
   ) |>
@@ -674,16 +674,18 @@ plotlyOutput("plot_exp_laboral", height = "550px", width = "100%")
 plotlyOutput("plot_sin_trayectoria", height = "500px", width = "100%")
 ```
 
-## Row
-
-```{r}
-DT::DTOutput("tabla_candidatos", width = "100%")
-```
-
 # Resumen por partido
 
 ## Row
 
 ```{r}
 DT::DTOutput("tabla_partidos", width = "100%")
+```
+
+# Todos los candidatos
+
+## Row
+
+```{r}
+DT::DTOutput("tabla_candidatos", width = "100%")
 ```
