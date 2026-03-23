@@ -1,8 +1,12 @@
-FROM ghcr.io/quarto-dev/quarto-r:latest
+FROM rocker/r-ver:4.4.3
 
 ENV DEBIAN_FRONTEND=noninteractive
+ARG QUARTO_VERSION=1.6.42
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    gdebi-core \
+    ca-certificates \
     libmagick++-dev \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -15,6 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtiff5-dev \
     libjpeg-dev \
     && rm -rf /var/lib/apt/lists/*
+
+RUN wget -q "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb" -O /tmp/quarto.deb \
+    && gdebi -n /tmp/quarto.deb \
+    && rm -f /tmp/quarto.deb
 
 WORKDIR /app
 COPY . /app
