@@ -42,6 +42,11 @@ body, .quarto-dashboard, .card, .card-body,
   border-bottom-left-radius: 0 !important;
 }
 
+/* Unificar tipografía en TODO el sidebar */
+.quarto-dashboard .sidebar,
+.quarto-dashboard .sidebar * {
+  font-family: "Cabin", sans-serif !important;
+}
 
 /* ── Navbar ────────────────────────────────────────────────────────────────*/
 
