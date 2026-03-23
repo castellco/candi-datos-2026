@@ -1,0 +1,13 @@
+.git
+.gitignore
+.Rhistory
+.RData
+.Rproj.user
+*.Rproj
+renv/library
+renv/staging
+*.log
+index_files/
+index.html
+data_prep/
+scraper/

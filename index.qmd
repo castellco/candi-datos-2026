@@ -1,12 +1,13 @@
 ---
-title: "CandiDatos 2026"
+title: "CandiDATOS"
+subtitle: " ·   Rumbo a las Elecciones Generales del Perú, 2026"
 format:
   dashboard:
     theme: [litera, assets/custom.scss]
     orientation: rows
     scrolling: true
 server: shiny
-execute:
+execute:vos que sea
   echo: false
   warning: false
   message: false
@@ -180,13 +181,11 @@ label_partido <- crear_labels_unicos(partidos_list)
 
 # {.sidebar}
 
-::: {style="font-size:0.85rem; line-height:1.4; max-width:180px;"}
-Visualiza las hojas de vida que los candidatos a las Elecciones Generales 2026 declararon ante el JNE.
-:::
+Información declarada por los/as candidatos/as.
 
 ---
 
-Filtra los datos:
+Filtra por:
 
 ```{r}
 #| label: sidebar-filtros
@@ -208,7 +207,11 @@ radioButtons("sentencia_filter", "Sentencias",
 **Fuente:** [JNE — Voto Informado](https://votoinformado.jne.gob.pe)  
 Datos al 1 de marzo de 2026
 
+Extracción y visualización de datos: \n 
+<br>**Carolina Cornejo Castellano** </br>.
+
 [X](https://x.com/castellco_) · [LinkedIn](https://www.linkedin.com/in/cornejocastellano) · [GitHub](https://github.com/castellco)
+
 
 ```{r}
 #| label: server
@@ -282,7 +285,7 @@ output$plot_ingresos_partido <- renderPlotly({
     textfont     = list(color = blanco, size = 13, family = "Cabin")
   ) |>
   layout(
-    title = titulo_plotly("Ingreso promedio declarado por partido",
+    title = titulo_plotly("Según lo que declaran, ¿cuáles son los ingresos promedio por partido?",
                           paste0("En soles (S/) · ", n_label(d))),
     xaxis = list(color = blanco, gridcolor = gris_claro, tickformat = ",.0f",
                  tickprefix = "S/ ", tickfont = list(family = "Cabin")),
@@ -315,7 +318,7 @@ output$plot_sentencias_partido <- renderPlotly({
     textfont     = list(color = blanco, size = 13, family = "Cabin")
   ) |>
   layout(
-    title = titulo_plotly("Candidatos con sentencias por partido", n_label(d)),
+    title = titulo_plotly("¿Qué partidos tienen más candidatos con sentencias?", n_label(d)),
     xaxis = list(color = blanco, gridcolor = gris_claro, tickfont = list(family = "Cabin")),
     yaxis = list(color = blanco, gridcolor = "transparent",
                  tickfont = list(family = "Cabin", size = 13), tickmode = "linear", tick0 = 0, dtick = 1, automargin = TRUE, title = ""),
@@ -368,21 +371,22 @@ output$plot_ingreso_tipo <- renderPlotly({
     marker = list(color = rojo),
     text = ~tooltip, hoverinfo = "text",
     texttemplate = ~paste0(pct, "%"),
-    textposition = "inside",
+    textposition = "auto",
     textfont = list(color = blanco, size = 13, family = "Cabin")
   ) |>
   add_trace(
     data = largo |> filter(tipo == "pct_priv"),
     x = ~pct, y = ~partido,
     name = "Privado",
-    marker = list(color = blanco),
+    marker = list(color = amarillo),
     text = ~tooltip, hoverinfo = "text",
     texttemplate = ~paste0(pct, "%"),
-    textposition = "inside",
-    textfont = list(color = blanco, size = 13, family = "Cabin")
+    textposition = "auto",
+    textfont = list(color = background_oscuro, size = 13, family = "Cabin")
   ) |>
   layout(
     barmode = "stack",
+    uniformtext = list(minsize = 11, mode = "hide"),
     title = titulo_plotly("Origen de ingresos por partido",
                           paste0("% del total declarado · público vs. privado · ",
                                  label_n_pub)),
@@ -426,11 +430,11 @@ output$plot_sexo_partido <- renderPlotly({
   plot_ly(base_fem,
     x = ~pct, y = ~partido,
     name = "Femenino", type = "bar", orientation = "h",
-    marker = list(color = "#02a1c7"),   # azul definido inline para no depender del theme
+    marker = list(color = rojo),
     text = ~paste0(partido, "<br>Femenino: ", pct, "%"),
     hoverinfo = "text",
     texttemplate = ~paste0(pct, "%"),
-    textposition = "inside",
+    textposition = "auto",
     textfont = list(color = blanco, size = 13, family = "Cabin")
   ) |>
   add_trace(
@@ -441,11 +445,12 @@ output$plot_sexo_partido <- renderPlotly({
     text = ~paste0(partido, "<br>Masculino: ", pct, "%"),
     hoverinfo = "text",
     texttemplate = ~paste0(pct, "%"),
-    textposition = "inside",
-    textfont = list(color = blanco, size = 13, family = "Cabin")
+    textposition = "auto",
+    textfont = list(color = background_oscuro, size = 13, family = "Cabin")
   ) |>
   layout(
     barmode = "stack",
+    uniformtext = list(minsize = 11, mode = "hide"),
     title = titulo_plotly("Distribución por sexo por partido",
                           paste0("% de candidatos · ordenado por % femenino · ",
                                  label_n_sex)),
@@ -486,7 +491,7 @@ output$plot_exp_laboral <- renderPlotly({
     textfont     = list(color = blanco, size = 13, family = "Cabin")
   ) |>
   layout(
-    title = titulo_plotly("Promedio de años de experiencia laboral por partido",
+    title = titulo_plotly("¿Cuàl es el promedio de años de experiencia laboral por partido?",
                           paste0(n_label(d), " con experiencia declarada")),
     xaxis = list(color = blanco, gridcolor = gris_claro, ticksuffix = " años",
                  tickfont = list(family = "Cabin")),
@@ -565,16 +570,16 @@ output$plot_ranking_candidatos_sent <- renderPlotly({
     textfont     = list(color = blanco, size = 13, family = "Cabin")
   ) |>
   layout(
-    title = titulo_plotly("Candidatos con más sentencias",
-                          "Top 20 · hover para ver materias y fallos"),
+    title = titulo_plotly("¿Quiénes son los candidatos/as con más sentencias?",
+                          "20 primeros, según su propia declaración · pon el cursor encima para más info"),
     xaxis = list(color = blanco, gridcolor = gris_claro,
                  dtick = 1, tickfont = list(family = "Cabin")),
     yaxis = list(color = blanco, gridcolor = "transparent",
                  tickfont = list(family = "Cabin", size = 13), tickmode = "linear", tick0 = 0, dtick = 1, automargin = TRUE, title = ""),
     paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
     font = list(color = blanco, family = "Cabin"),
-    margin = list(l = 5, r = 15, t = 90, b = 5),
-    bargap = 0.9
+    margin = list(l = 5, r = 15, t = 90, b = 5)
+    # bargap = 0.9
   )
 })
 
@@ -620,8 +625,7 @@ output$plot_ranking_ingresos_cand <- renderPlotly({
                  tickfont = list(family = "Cabin", size = 13), tickmode = "linear", tick0 = 0, dtick = 1, automargin = TRUE, title = ""),
     paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
     font = list(color = blanco, family = "Cabin"),
-    margin = list(l = 5, r = 15, t = 90, b = 5),
-    bargap = 0.9
+    margin = list(l = 5, r = 15, t = 90, b = 5)
   )
 })
 
@@ -655,8 +659,7 @@ output$plot_ranking_sentencias <- renderPlotly({
                  tickfont = list(family = "Cabin", size = 13), tickmode = "linear", tick0 = 0, dtick = 1, automargin = TRUE, title = ""),
     paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
     font = list(color = blanco, family = "Cabin"),
-    margin = list(l = 5, r = 15, t = 90, b = 5),
-    bargap = 0.9
+    margin = list(l = 5, r = 15, t = 90, b = 5)
   )
 })
 
@@ -717,17 +720,16 @@ output$plot_sin_trayectoria <- renderPlotly({
   layout(
     title = titulo_plotly(
       "Sin experiencia laboral, pero con altos ingresos",
-      "Top 10 candidatos sin exp. laboral, cargos partidarios ni elección popular declarados ante el JNE"
+      "Top 10 candidatos que no declaran exp. laboral, cargos partidarios ni elección popular declarados ante el JNE"
     ),
     xaxis = list(color = blanco, gridcolor = gris_claro,
-                 tickformat = ",.0f", tickprefix = "S/ ",
+                 tickformat = ",.0f", ticthkprefix = "S/ ",
                  tickfont = list(family = "Cabin")),
     yaxis = list(color = blanco, gridcolor = "transparent",
                  tickfont = list(family = "Cabin", size = 13), tickmode = "linear", tick0 = 0, dtick = 1, automargin = TRUE, title = ""),
     paper_bgcolor = background_oscuro, plot_bgcolor = background_oscuro,
     font = list(color = blanco, family = "Cabin"),
-    margin = list(l = 5, r = 15, t = 100, b = 5),
-    bargap = 0.9
+    margin = list(l = 5, r = 15, t = 100, b = 5)
   )
 })
 
@@ -798,10 +800,10 @@ uiOutput("vb_andino_p")
 uiOutput("vb_presidencia_p")
 ```
 ```{r}
-uiOutput("vb_partidos_p")
+uiOutput("vb_sentencias_p")
 ```
 ```{r}
-uiOutput("vb_sentencias_p")
+uiOutput("vb_partidos_p")
 ```
 
 ## Row
