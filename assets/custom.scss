@@ -4,8 +4,8 @@
 
 $font-family-sans-serif: "Cabin", sans-serif;
 $headings-font-family:   "Special Gothic Expanded One", sans-serif;
-$navbar-bg:              #272626 !default;
-$navbar-fg:              #ffffff !default;
+$navbar-bg:              #222831 !default;
+$navbar-fg:              #f9ffee !default;
 $primary:                #be2e1c;
 $link-color:             #be2e1c;
 
@@ -22,34 +22,28 @@ body, .quarto-dashboard, .card, .card-body,
 .quarto-dashboard .bslib-page-fill,
 .quarto-dashboard .tab-content,
 .quarto-dashboard .tab-pane {
-  background-color: #272626 !important;
+  background-color: #f9ffee !important;
   border: none !important;
   padding: 0 !important;
   margin: 0 !important;
 }
 
-/* El body y html también pueden tener fondo blanco */
-html, body {
-  background-color: #383838 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
 
 .bslib-gap-spacing {
-  background-color: #383838 !important;
+  background-color: #f9ffee !important;
   --bslib-spacer: 0;
 }
 
 
 .bslib-sidebar-layout > .main {
-  --_main-bg: #383838 !important;
-  background-color: #383838 !important;
+  --_main-bg: #222831 !important;
+  background-color: #222831 !important;
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
 }
 
 
-/* ── Navbar ──────────────────────────────────────────────────────────────── */
+/* ── Navbar ────────────────────────────────────────────────────────────────*/
 
 .navbar-container { height: 75px; }
 
@@ -66,8 +60,19 @@ html, body {
   background: transparent !important;
 }
 
+.quarto-dashboard .card:not(.bslib-value-box) .card-body {
+  background: transparent !important;
+}
+
 .quarto-dashboard .card:not(.bslib-value-box) .card-header {
   display: none !important;
+}
+
+/* Solo los cards superiores (value boxes) en rojo */
+.quarto-dashboard .bslib-value-box {
+  background-color: #be2e1c !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* ── Value boxes ─────────────────────────────────────────────────────────── */
@@ -185,4 +190,92 @@ table.dataTable tbody tr:hover td {
   .bslib-value-box .value-box-value { font-size: 1rem !important; }
   .bslib-value-box .value-box-title { font-size: 0.6rem !important; }
   .quarto-dashboard .bslib-column { flex: 0 0 100% !important; max-width: 100% !important; }
+}
+
+/* ── Sidebar: fondo claro + texto oscuro ───────────────────────────────── */
+
+.quarto-dashboard .sidebar {
+  background-color: #f9ffee !important;
+}
+
+.quarto-dashboard .sidebar,
+.quarto-dashboard .sidebar * {
+  color: #222831 !important;
+}
+
+/* Labels de inputs */
+.quarto-dashboard .sidebar .control-label,
+.quarto-dashboard .sidebar .form-label,
+.quarto-dashboard .sidebar .shiny-input-container > label,
+.quarto-dashboard .sidebar .checkbox label,
+.quarto-dashboard .sidebar .radio label {
+  color: #222831 !important;
+}
+
+/* Select / selectize */
+.quarto-dashboard .sidebar select,
+.quarto-dashboard .sidebar .selectize-input,
+.quarto-dashboard .sidebar .selectize-input input,
+.quarto-dashboard .sidebar .selectize-dropdown,
+.quarto-dashboard .sidebar .selectize-dropdown-content,
+.quarto-dashboard .sidebar .selectize-dropdown .option,
+.quarto-dashboard .sidebar .selectize-dropdown .item {
+  color: #222831 !important;
+}
+
+/* Placeholder y texto auxiliar */
+.quarto-dashboard .sidebar input::placeholder,
+.quarto-dashboard .sidebar textarea::placeholder,
+.quarto-dashboard .sidebar .help-block,
+.quarto-dashboard .sidebar .form-text,
+.quarto-dashboard .sidebar .shiny-options-group {
+  color: #222831 !important;
+}
+
+/* Título/acerca en sidebar */
+.quarto-dashboard .sidebar h1,
+.quarto-dashboard .sidebar h2,
+.quarto-dashboard .sidebar h3,
+.quarto-dashboard .sidebar h4,
+.quarto-dashboard .sidebar h5,
+.quarto-dashboard .sidebar h6,
+.quarto-dashboard .sidebar p,
+.quarto-dashboard .sidebar li,
+.quarto-dashboard .sidebar span,
+.quarto-dashboard .sidebar a {
+  color: #222831 !important;
+}
+
+/* ── Sidebar dropdown/drilldown: caja blanca + texto oscuro ────────────── */
+
+.quarto-dashboard .sidebar select,
+.quarto-dashboard .sidebar .form-select,
+.quarto-dashboard .sidebar .selectize-input {
+  background-color: #ffffff !important;
+  border-color: #d0d0d0 !important;
+  color: #222831 !important;
+}
+
+.quarto-dashboard .sidebar .selectize-dropdown,
+.quarto-dashboard .sidebar .selectize-dropdown-content,
+.quarto-dashboard .sidebar .dropdown-menu {
+  background-color: #ffffff !important;
+  border: 1px solid #d0d0d0 !important;
+  color: #222831 !important;
+}
+
+.quarto-dashboard .sidebar .selectize-dropdown .option,
+.quarto-dashboard .sidebar .dropdown-item {
+  background-color: #ffffff !important;
+  color: #222831 !important;
+}
+
+.quarto-dashboard .sidebar .selectize-dropdown .option.active,
+.quarto-dashboard .sidebar .selectize-dropdown .option.selected,
+.quarto-dashboard .sidebar .selectize-dropdown .option:hover,
+.quarto-dashboard .sidebar .dropdown-item:hover,
+.quarto-dashboard .sidebar .dropdown-item:focus,
+.quarto-dashboard .sidebar .dropdown-item.active {
+  background-color: #f3f3f3 !important;
+  color: #222831 !important;
 }

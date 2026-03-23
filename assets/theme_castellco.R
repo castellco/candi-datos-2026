@@ -3,8 +3,9 @@ source("assets/functions.R")
 # Paleta de colores
 gris_claro       <- "#464743"
 rojo             <- "#be2e1c"
-background_oscuro <- "#383838"
-blanco           <- "#ffffff"
+background_oscuro <- "#222831"
+blanco           <- "#f9ffee"
+amarillo <-  "#f9ffee"
 
 # Constantes del tema
 font_family     <- "Cabin"
