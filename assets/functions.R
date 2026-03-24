@@ -5,8 +5,6 @@ library(stringr)
 library(ggtext)
 library(ggborderline)
 library(scales)
-library(patchwork)
-library(magick)
 
 # systemfonts::system_fonts() |> View()
 
