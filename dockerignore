@@ -1,0 +1,28 @@
+# Control de versiones
+.git
+.gitignore
+.gitattributes
+
+# Archivos de desarrollo
+.vscode
+*.qmd
+index_files/
+scraper/
+data_prep/
+
+# Archivos de deploy anteriores
+Dockerfile.old
+Procfile
+railway.toml
+run.R
+deploy.R
+index.html
+
+# R específico
+*.Rproj
+*.Rhistory
+.Rdata
+
+# Misceláneos
+*.md
+!README.md

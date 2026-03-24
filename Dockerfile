@@ -1,31 +1,41 @@
-FROM rocker/r-ver:4.3.1
+# ============================================================
+# Dockerfile — CandiDATOS 2026
+# Para Hugging Face Spaces (puerto 7860 obligatorio)
+# Base: rocker/shiny-verse (incluye tidyverse, sin instalar por separado)
+# ============================================================
 
-# Dependencias del sistema
-RUN apt-get update && apt-get install -y \
+FROM rocker/shiny-verse:4.4.1
+
+# Dependencias de sistema mínimas
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
-    curl \
-    pandoc \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Quarto
-RUN curl -LO https://quarto.org/download/latest/quarto-linux-amd64.deb \
-    && dpkg -i quarto-linux-amd64.deb \
-    && rm quarto-linux-amd64.deb
+# REQUERIMIENTO OFICIAL DE HF SPACES:
+# Usar la versión de desarrollo de httpuv para evitar timeouts
+RUN install2.r --error remotes \
+    && Rscript -e "remotes::install_github('rstudio/httpuv')"
 
-# Instalar paquetes R (LOS QUE USA TU APP)
-RUN R -e "install.packages(c( \
-  'shiny','bslib','dplyr','ggplot2','plotly','DT','duckdb','DBI', \
-  'glue','scales','stringr','janitor','tidyr','readr','ggtext', 'ggborderline', 'quarto' \
-), repos='https://cloud.r-project.org')"
+# Paquetes R adicionales (tidyverse ya viene en rocker/shiny-verse)
+RUN install2.r --error \
+    bslib \
+    plotly \
+    DT \
+    duckdb \
+    DBI \
+    glue \
+    janitor \
+    && rm -rf /tmp/downloaded_packages
 
-# Copiar proyecto
+# Copiar la app
 WORKDIR /app
-COPY . /app
+COPY app.R    /app/app.R
+COPY data/    /app/data/
+COPY assets/  /app/assets/
 
-# Puerto (Railway usa PORT dinámico)
-EXPOSE 3838
+# HF Spaces requiere puerto 7860
+EXPOSE 7860
 
-# Comando de arranque (CLAVE)
-CMD ["Rscript", "-e", "port <- as.numeric(Sys.getenv('PORT', '3838')); quarto::quarto_serve('index.qmd', host='0.0.0.0', port=port)"]
+CMD ["R", "--quiet", "-e", "shiny::runApp('/app', host='0.0.0.0', port=7860)"]
