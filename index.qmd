@@ -7,6 +7,7 @@ format:
     orientation: rows
     scrolling: true
 server: shiny
+runtime: shiny
 execute:
   echo: false
   warning: false
