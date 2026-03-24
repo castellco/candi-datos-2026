@@ -17,7 +17,7 @@ RUN curl -LO https://quarto.org/download/latest/quarto-linux-amd64.deb \
 # Instalar paquetes R (LOS QUE USA TU APP)
 RUN R -e "install.packages(c( \
   'shiny','bslib','dplyr','ggplot2','plotly','DT','duckdb','DBI', \
-  'glue','scales','stringr','janitor','tidyr','readr' \
+  'glue','scales','stringr','janitor','tidyr','readr','quarto' \
 ), repos='https://cloud.r-project.org')"
 
 # Copiar proyecto
