@@ -1,21 +1,20 @@
-#  ------------------------------------------------------------------------
-# # Ignore everything
-# *
-
-# # Don't ignore directories, so we can recurse into them
-# !*/
-
-# # Don't ignore .gitignore and *.foo files
-# !.gitignore
-# !*.py
-# !*.md
-# !*.csv
-
-
-# Ignore
+# Binarios y artefactos de Quarto (causan fallo en HF Spaces)
+index_files/
+*.html
 *.pdf
 *_old.py
 *.pbix
 *.duckdb
 *.duckdb.wal
 
+# Archivos de deploy obsoletos
+Procfile
+railway.toml
+run.R
+index.qmd
+index_2.qmd
+
+# R
+*.Rhistory
+.RData
+.Rproj.user
