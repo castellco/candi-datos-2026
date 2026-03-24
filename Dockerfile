@@ -4,6 +4,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG QUARTO_VERSION=1.6.42
 
+CMD ["sh", "-c", "quarto preview /app/index.qmd --host 0.0.0.0 --port ${PORT:-8080} --no-watch-inputs"]
+
+
 # System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
