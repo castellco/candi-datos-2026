@@ -83,24 +83,109 @@ label_partido <- crear_labels_unicos(partidos_list)
 
 custom_css <- "
   @import url('https://fonts.googleapis.com/css2?family=Cabin:wght@400;600;700&display=swap');
-  body,.bslib-page-dashboard{background-color:#2b2b2b!important;color:#ffffff;}
-  .navbar,.navbar-default{background-color:#1a1a1a!important;border-bottom:3px solid #be2e1c;}
-  .navbar-brand,.navbar-nav>li>a{color:#ffffff!important;font-family:'Cabin',sans-serif;}
-  .nav-link.active{border-bottom:3px solid #be2e1c!important;color:#febd17!important;}
-  .card{background-color:#383838!important;border:1px solid #464743;}
-  .card-header{background-color:#464743!important;color:#ffffff;}
-  .sidebar{background-color:#1e1e1e!important;border-right:2px solid #be2e1c;}
-  .form-select,.form-control{background-color:#383838!important;color:#ffffff!important;border-color:#464743!important;}
-  .form-check-label{color:#ffffff!important;}
-  .form-check-input:checked{background-color:#be2e1c!important;border-color:#be2e1c!important;}
-  h1,h2,h3,h4,h5{font-family:'Cabin',sans-serif;color:#ffffff;}
-  a{color:#febd17!important;}
+
+  /* ── Base ── */
+  *, *::before, *::after { box-sizing: border-box; }
+  body, .bslib-page-dashboard { background-color:#2b2b2b!important; color:#ffffff; font-family:'Cabin',sans-serif; }
+
+  /* ── Navbar ── */
+  .navbar, .navbar-default { background-color:#1a1a1a!important; border-bottom:3px solid #be2e1c; }
+  .navbar-brand, .navbar-nav>li>a { color:#ffffff!important; font-family:'Cabin',sans-serif; }
+  .nav-link.active { border-bottom:3px solid #be2e1c!important; color:#febd17!important; }
+  /* título más corto en móvil */
+  .navbar-title-sub { display:inline; }
+  @media(max-width:576px){
+    .navbar-title-sub { display:none; }
+    .navbar-brand { font-size:1rem!important; }
+  }
+
+  /* ── Cards ── */
+  .card { background-color:#383838!important; border:1px solid #464743; margin-bottom:0.75rem; }
+  .card-header { background-color:#464743!important; color:#ffffff; }
+
+  /* ── Sidebar ── */
+  .sidebar { background-color:#1e1e1e!important; border-right:2px solid #be2e1c; }
+  /* en móvil el sidebar colapsa — el toggle button de bslib lo maneja solo */
+  @media(max-width:767px){
+    .sidebar { border-right:none!important; border-bottom:2px solid #be2e1c; }
+  }
+
+  /* ── Inputs ── */
+  .form-select, .form-control { background-color:#383838!important; color:#ffffff!important; border-color:#464743!important; }
+  .form-check-label { color:#ffffff!important; }
+  .form-check-input:checked { background-color:#be2e1c!important; border-color:#be2e1c!important; }
+  select, .selectize-input { font-size:1rem!important; }
+
+  /* ── Tipografía ── */
+  h1,h2,h3,h4,h5 { font-family:'Cabin',sans-serif; color:#ffffff; }
+  a { color:#febd17!important; }
+
+  /* ── Value boxes: grid adaptable ── */
+  .vboxes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  @media(max-width:767px){
+    .vboxes-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media(max-width:400px){
+    .vboxes-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .vboxes-grid .bslib-value-box { margin:0!important; min-height:70px; }
+  .bslib-value-box .value-box-value { font-size:1.4rem!important; }
+  .bslib-value-box .value-box-title { font-size:0.65rem!important; text-transform:uppercase; letter-spacing:0.04em; }
+  @media(max-width:576px){
+    .bslib-value-box .value-box-value { font-size:1.1rem!important; }
+    .bslib-value-box .value-box-title { font-size:0.6rem!important; }
+  }
+
+  /* ── Layout de columnas: stack en móvil ── */
+  @media(max-width:767px){
+    .layout-col-left, .layout-col-right { width:100%!important; flex:0 0 100%!important; max-width:100%!important; }
+    .bslib-gap-spacing { --bslib-spacer:0.5rem; }
+  }
+
+  /* ── Plotly: siempre full width ── */
+  .plotly, .js-plotly-plot, .plot-container { width:100%!important; }
+  @media(max-width:767px){
+    .plotly .main-svg { font-size:10px!important; }
+  }
+
+  /* ── Tablas DT ── */
+  .dataTables_wrapper, .dataTables_wrapper * { font-family:'Cabin',sans-serif!important; color:#ffffff!important; }
+  table.dataTable, table.dataTable thead th, table.dataTable thead td,
+  table.dataTable tbody tr, table.dataTable tbody td {
+    background-color:#383838!important; color:#ffffff!important; border-color:#464743!important;
+  }
+  table.dataTable thead th { border-bottom:2px solid #be2e1c!important; }
+  table.dataTable tbody tr:hover td { background-color:#4a4a4a!important; }
+  .dataTables_paginate, .dataTables_paginate .paginate_button,
+  .dataTables_info, .dataTables_length, .dataTables_filter, .dataTables_filter input {
+    color:#ffffff!important; background-color:#383838!important; border-color:#464743!important;
+  }
+  .dataTables_paginate .paginate_button.current {
+    border:1px solid #be2e1c!important; background:#be2e1c!important; color:#ffffff!important;
+  }
+  /* tabla scrollable en móvil — ya tiene scrollX=TRUE */
+  @media(max-width:576px){
+    .dataTables_wrapper { font-size:0.8rem!important; }
+  }
+
+  /* ── Padding general en móvil ── */
+  @media(max-width:576px){
+    .container-fluid, .tab-content { padding-left:0.4rem!important; padding-right:0.4rem!important; }
+  }
 "
 
 ui <- page_navbar(
-  title = tags$span(tags$b("CandiDATOS"),
-                    tags$span(" · Elecciones Generales del Perú 2026",
-                              style = "font-size:0.85em;color:#aaaaaa;")),
+  title = tags$span(
+    tags$b("CandiDATOS"),
+    tags$span(class = "navbar-title-sub",
+              " · Elecciones Generales del Perú 2026",
+              style = "font-size:0.85em;color:#aaaaaa;")
+  ),
   theme = bs_theme(bootswatch = "litera", bg = background_oscuro, fg = blanco,
                    primary = rojo, secondary = gris_claro, base_font = font_google("Cabin")),
   fillable = FALSE,
@@ -128,31 +213,31 @@ ui <- page_navbar(
            style = "color:#aaaaaa;font-size:0.8rem;")
   ),
   nav_panel("Por partido",
-    layout_columns(col_widths = rep(2,6),
+    div(class = "vboxes-grid",
       uiOutput("vb_total_p"), uiOutput("vb_diputados_p"), uiOutput("vb_senadores_p"),
       uiOutput("vb_andino_p"), uiOutput("vb_presidencia_p"), uiOutput("vb_sentencias_p")),
     br(),
-    layout_columns(col_widths = c(6,6),
-      card(plotlyOutput("plot_sentencias_partido", height="520px")),
-      card(plotlyOutput("plot_exp_laboral",        height="520px"))),
-    layout_columns(col_widths = c(6,6),
-      card(plotlyOutput("plot_ingresos_partido", height="520px")),
-      card(plotlyOutput("plot_ingreso_tipo",     height="520px"))),
-    card(plotlyOutput("plot_sexo_partido", height="520px")),
+    layout_columns(col_widths = breakpoints(xs=12, md=6),
+      card(plotlyOutput("plot_sentencias_partido", height="480px")),
+      card(plotlyOutput("plot_exp_laboral",        height="480px"))),
+    layout_columns(col_widths = breakpoints(xs=12, md=6),
+      card(plotlyOutput("plot_ingresos_partido", height="480px")),
+      card(plotlyOutput("plot_ingreso_tipo",     height="480px"))),
+    card(plotlyOutput("plot_sexo_partido", height="480px")),
     card(card_header("Resumen por partido"), DTOutput("tabla_partidos", width="100%"))
   ),
   nav_panel("Por candidatos",
-    layout_columns(col_widths = rep(2,6),
+    div(class = "vboxes-grid",
       uiOutput("vb_total_c"), uiOutput("vb_diputados_c"), uiOutput("vb_senadores_c"),
       uiOutput("vb_andino_c"), uiOutput("vb_presidencia_c"), uiOutput("vb_partidos_c")),
     br(),
-    layout_columns(col_widths = c(6,6),
-      card(plotlyOutput("plot_ranking_candidatos_sent", height="600px")),
-      card(plotlyOutput("plot_ranking_sentencias",      height="500px"))),
-    layout_columns(col_widths = c(6,6),
-      card(plotlyOutput("plot_ranking_ingresos_cand", height="600px")),
-      card(plotlyOutput("plot_treemap",               height="500px"))),
-    card(plotlyOutput("plot_sin_trayectoria", height="500px")),
+    layout_columns(col_widths = breakpoints(xs=12, md=6),
+      card(plotlyOutput("plot_ranking_candidatos_sent", height="550px")),
+      card(plotlyOutput("plot_ranking_sentencias",      height="450px"))),
+    layout_columns(col_widths = breakpoints(xs=12, md=6),
+      card(plotlyOutput("plot_ranking_ingresos_cand", height="550px")),
+      card(plotlyOutput("plot_treemap",               height="450px"))),
+    card(plotlyOutput("plot_sin_trayectoria", height="480px")),
     card(card_header(uiOutput("tabla_caption")), DTOutput("tabla_candidatos", width="100%"))
   )
 )
