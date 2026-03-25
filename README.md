@@ -18,7 +18,7 @@ Dashboard interactivo con datos declarados por los candidatos a las **Elecciones
 
 ## Datos
 
-Fuente: JNE — Voto Informado. Datos al 1 de marzo de 2026.
+Fuente: JNE — Voto Informado. Datos al 1 de marzo de 2026. 
 
 ## Autoría
 
