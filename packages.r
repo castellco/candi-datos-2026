@@ -1,0 +1,18 @@
+install.packages(c(
+  "shiny",
+  "bslib",
+  "DT",
+  "duckdb",
+  "DBI",
+  "glue",
+  "scales",
+  "stringr",
+  "janitor",
+  "ggplot2",
+  "dplyr",
+  "DT",
+  "plotly",
+  "readr",
+  "tidyr",
+  "shinythemes"
+))

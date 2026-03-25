@@ -1,15 +1,14 @@
 ---
-title: CandiDATOS 2026
+title: "CandiDATOS 2026"
 emoji: 🗳️
 colorFrom: red
 colorTo: yellow
-sdk: docker
-app_port: 7860
+sdk: r
+sdk_version: "4.4"
+app_file: app.R
 pinned: false
 license: mit
-short_description: Datos de candidatos a las Elecciones Generales del Perú 2026
 ---
-
 # CandiDATOS 2026
 
 Dashboard interactivo con datos declarados por los candidatos a las **Elecciones Generales del Perú 2026**, según información del [JNE — Voto Informado](https://votoinformado.jne.gob.pe).

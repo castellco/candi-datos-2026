@@ -22,7 +22,7 @@ options(scipen = 999)
 # ── Paleta de colores (inline, sin depender de theme_castellco.R) ─────────────
 rojo             <- "#be2e1c"
 blanco           <- "#ffffff"
-amarillo         <- "#febd17"
+amarillo         <- "#f5f5dc"
 background_oscuro <- "#2b2b2b"
 gris_claro       <- "#464743"
 
