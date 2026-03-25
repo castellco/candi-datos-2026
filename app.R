@@ -215,6 +215,7 @@ ui <- page_navbar(
     tags$p(HTML("Extracción y visualización:<br><b>Carolina Cornejo Castellano</b><br>
                  <a href='https://x.com/castellco_' target='_blank'>X</a> ·
                  <a href='https://www.linkedin.com/in/cornejocastellano' target='_blank'>LinkedIn</a> ·
+                 <a href='https://bsky.app/profile/castellco.bsky.social' target='_blank'>Bluesky</a> ·
                  <a href='https://github.com/castellco' target='_blank'>GitHub</a>"),
            style = "color: #aaaaaa; font-size: 0.8rem;")
   ),
