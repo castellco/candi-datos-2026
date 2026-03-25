@@ -15,7 +15,7 @@ library(glue)
 library(scales)
 library(stringr)
 library(janitor)
-library(tidyr) 
+library(tidyr)
 
 options(scipen = 999)
 
@@ -193,7 +193,7 @@ ui <- page_navbar(
   sidebar = sidebar(
     width = 260,
     bg = "#1e1e1e",
-    tags$p("Información declarada por los/as candidatos/as.",
+    tags$p("Información declarada por los/as candidatos/as y de acceso público.",
            style = "color: #aaaaaa; font-size: 0.85rem;"),
     tags$hr(style = "border-color: #be2e1c;"),
     tags$b("Filtra por:", style = "color: #ffffff;"),
@@ -321,7 +321,7 @@ server <- function(input, output, session) {
   }
 
   # Value boxes — tab partido
-  output$vb_total_p     <- renderUI(vbox("Candidatos",      n_distinct(fc()$dni)))
+  output$vb_total_p     <- renderUI(vbox("Candidatos/as",      n_distinct(fc()$dni)))
   output$vb_diputados_p <- renderUI(vbox("Diputados/as",    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Diputados"])))
   output$vb_senadores_p <- renderUI(vbox("Senadores/as",    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Senadores"])))
   output$vb_andino_p    <- renderUI(vbox("Parlamento Andino", n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Parlamento Andino"])))
@@ -333,7 +333,7 @@ server <- function(input, output, session) {
   output$vb_diputados_c <- renderUI(vbox("Diputados/as",    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Diputados"])))
   output$vb_senadores_c <- renderUI(vbox("Senadores/as",    n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Senadores"])))
   output$vb_andino_c    <- renderUI(vbox("Parlamento Andino", n_distinct(fc()$dni[fc()$cargo_al_que_postula == "Parlamento Andino"])))
-  output$vb_presidencia_c <- renderUI(vbox("Presidencia",   n_distinct(fc()$dni[fc()$cargo_al_que_postula %in% cargos_presidenciales])))
+  output$vb_presidencia_c <- renderUI(vbox("Plancha Presidencial",   n_distinct(fc()$dni[fc()$cargo_al_que_postula %in% cargos_presidenciales])))
   output$vb_partidos_c  <- renderUI(vbox("Partidos",        n_distinct(fc()$partido)))
 
   # ── 1. Ingreso promedio por partido ─────────────────────────────────────────
