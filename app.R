@@ -15,7 +15,7 @@ library(glue)
 library(scales)
 library(stringr)
 library(janitor)
-library(tidyr)
+library(tidyr) 
 
 options(scipen = 999)
 
