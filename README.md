@@ -1,13 +1,7 @@
 ---
-title: "CandiDATOS 2026"
-emoji: 🗳️
-colorFrom: red
-colorTo: yellow
-sdk: r
-sdk_version: "4.4"
-app_file: app.R
-pinned: false
-license: mit
+title: CandiDATOS 2026
+sdk: docker
+app_port: 7860
 ---
 # CandiDATOS 2026
 
