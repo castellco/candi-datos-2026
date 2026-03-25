@@ -1,20 +1,23 @@
-# Dockerfile
-FROM rocker/shiny:4.2.2
+# ============================================================
+# Dockerfile — CandiDATOS 2026 para Hugging Face Spaces
+# ============================================================
+FROM rocker/shiny-verse:4.4.1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1 fonts-liberation \
-    libfreetype6-dev libpng-dev libjpeg-dev \
-  && rm -rf /var/lib/apt/lists/*
+    libcurl4-openssl-dev libssl-dev libxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /srv/shiny-server
-COPY . /srv/shiny-server
+# httpuv dev — requerimiento oficial de HF para evitar timeouts
+RUN Rscript -e "install.packages('remotes', repos='https://cloud.r-project.org')" \
+ && Rscript -e "remotes::install_github('rstudio/httpuv')"
 
-# Instala CRAN listados en packages.txt
-COPY packages.txt /tmp/packages.txt
-RUN R -e "pkg <- readLines('/tmp/packages.txt'); pkg <- pkg[nzchar(pkg)]; if (length(pkg)) install.packages(pkg, repos='https://cloud.r-project.org')"
+# Paquetes adicionales (tidyverse + readr ya vienen en shiny-verse)
+RUN Rscript -e "install.packages(c('bslib','plotly','DT'), repos='https://cloud.r-project.org')"
 
-# Ejecuta install.R si existe (GitHub/Bioconductor extra)
-RUN if [ -f /srv/shiny-server/install.R ]; then Rscript /srv/shiny-server/install.R ; fi
+WORKDIR /app
+COPY app.R  /app/app.R
+COPY data/  /app/data/
 
-EXPOSE 8080
-CMD ["R","-e","shiny::runApp('/srv/shiny-server', host='0.0.0.0', port=as.integer(Sys.getenv('PORT','8080')) )"]
+EXPOSE 7860
+
+CMD ["R", "--quiet", "-e", "shiny::runApp('/app', host='0.0.0.0', port=7860)"]

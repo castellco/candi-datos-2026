@@ -4,7 +4,6 @@ dplyr
 ggplot2
 plotly
 DT
-duckdb
 DBI
 glue
 scales

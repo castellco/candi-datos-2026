@@ -2,7 +2,6 @@ install.packages(c(
   "shiny",
   "bslib",
   "DT",
-  "duckdb",
   "DBI",
   "glue",
   "scales",
