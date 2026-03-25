@@ -23,4 +23,4 @@ Fuente: JNE — Voto Informado. Datos al 1 de marzo de 2026.
 ## Autoría
 
 Extracción y visualización: **Carolina Cornejo Castellano**  
-[X](https://x.com/castellco_) · [LinkedIn](https://www.linkedin.com/in/cornejocastellano) · [GitHub](https://github.com/castellco)
+[X](https://x.com/castellco_) · [LinkedIn](https://www.linkedin.com/in/cornejocastellano) · [GitHub](https://github.com/castellco) 
